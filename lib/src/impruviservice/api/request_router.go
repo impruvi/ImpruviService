@@ -26,7 +26,7 @@ func RouteRequest(request events.APIGatewayProxyRequest) (events.APIGatewayProxy
 		}, nil
 	}
 
-	if request.Resource == "/validate-code" {
+	if request.Resource == "/validate-invitation-code" {
 		return *users.ValidateCode(&request), nil
 	} else if request.Resource == "/get-sessions" {
 		return *session.GetSessions(&request), nil

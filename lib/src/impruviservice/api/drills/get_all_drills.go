@@ -1,18 +1,17 @@
 package drills
 
 import (
+	"../../dao/drills"
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
 	"log"
 	"net/http"
 )
 
-type GetAllDrillsRequest struct {
-	Code string `json:"code"`
-}
+type GetAllDrillsRequest struct {}
 
 type GetAllDrillsResponse struct {
-	UserId string `json:"userId"`
+	Drills []*drills.Drill `json:"drills"`
 }
 
 func GetAllDrills(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
@@ -25,10 +24,16 @@ func GetAllDrills(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayP
 		}
 	}
 
-	// query users table by invitation code
+	allDrills, err := drills.GetAllDrills()
+	if err != nil {
+		log.Printf("Error while getting all drills: %v\n", err)
+		return &events.APIGatewayProxyResponse{
+			StatusCode: http.StatusInternalServerError,
+		}
+	}
 
 	rspBody, err := json.Marshal(GetAllDrillsResponse{
-		UserId: "", // TODO: get the actual UserId
+		Drills: allDrills,
 	})
 	if err != nil {
 		log.Printf("Error while marshalling response: %v\n", err)

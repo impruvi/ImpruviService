@@ -3,7 +3,6 @@ package session
 import (
 	"../../awsclients/dynamoclient"
 	"../../constants/tablenames"
-	"../drills"
 	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
@@ -18,15 +17,16 @@ var dynamo = dynamoclient.GetClient()
 type Session struct {
 	UserId string `json:"userId"`
 	SessionNumber int `json:"sessionNumber"`
-	Drills []*Drill
+	Drills []*Drill `json:"drills"`
 }
 
 type Drill struct {
-	Drill drills.Drill `json:"drill"`
+	DrillId string `json:"drillId"`
 	Submission *Submission `json:"submission"`
 	Feedback *Feedback `json:"feedback"`
-	Tips []string
-	Repetitions int
+	Tips []string `json:"tips"`
+	Repetitions int `json:"repetitions"`
+	DurationMinutes int `json:"durationMinutes"`
 }
 
 type Submission struct {
@@ -69,7 +69,7 @@ func CreateFeedback(sessionNumber int, userId, drillId, fileLocation string) err
 
 	found := false
 	for _, drill := range session.Drills {
-		if drill.Drill.DrillId == drillId {
+		if drill.DrillId == drillId {
 			drill.Feedback = &Feedback{
 				CreationDateEpochMillis: time.Now().UnixNano() / int64(time.Millisecond),
 				FileLocation:            fileLocation,
@@ -93,7 +93,7 @@ func CreateSubmission(sessionNumber int, userId, drillId, fileLocation string) e
 
 	found := false
 	for _, drill := range session.Drills {
-		if drill.Drill.DrillId == drillId {
+		if drill.DrillId == drillId {
 			drill.Submission = &Submission{
 				CreationDateEpochMillis: time.Now().UnixNano() / int64(time.Millisecond),
 				FileLocation:            fileLocation,

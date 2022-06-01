@@ -43,7 +43,7 @@ func GetVideoUploadUrl(apiRequest *events.APIGatewayProxyRequest) *events.APIGat
 	}
 
 	req, _ := S3Client.PutObjectRequest(&s3.PutObjectInput{
-		Bucket: aws.String(bucketnames.SubmissionsBucket),
+		Bucket: aws.String(getBucketName(request.VideoType)),
 		Key:    aws.String(fmt.Sprintf("%v/%v/%v", request.UserId, request.SessionNumber, request.DrillId)),
 	})
 	uploadUrl, err := req.Presign(15 * time.Minute)
@@ -67,6 +67,14 @@ func GetVideoUploadUrl(apiRequest *events.APIGatewayProxyRequest) *events.APIGat
 	return &events.APIGatewayProxyResponse{
 		Body:       string(rspBody),
 		StatusCode: http.StatusAccepted,
+	}
+}
+
+func getBucketName(videoType VideoType) string {
+	if videoType == Submission {
+		return bucketnames.SubmissionsBucket
+	} else {
+		return bucketnames.FeedbackBucket
 	}
 }
 

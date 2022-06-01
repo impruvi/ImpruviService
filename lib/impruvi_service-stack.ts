@@ -25,9 +25,9 @@ export class ImpruviServiceStack extends cdk.Stack {
     const iamRole = this.createIAMRole(this.domain);
     this.createDynamoTables();
     this.createApiResources(iamRole);
-    this.createS3Bucket('drills');
-    this.createS3Bucket('submissions');
-    this.createS3Bucket('feedback');
+    this.createS3Bucket('impruvi-drills');
+    this.createS3Bucket('impruvi-submissions');
+    this.createS3Bucket('impruvi-feedback');
   }
 
   createIAMRole = (domain: string) => {
@@ -72,15 +72,15 @@ export class ImpruviServiceStack extends cdk.Stack {
 
     new dynamodb.Table(this, `${this.domain}-drills`, {
       partitionKey: { name: 'drillId', type: dynamodb.AttributeType.STRING},
-      tableName: `${this.domain}-sessions`,
+      tableName: `${this.domain}-drills`,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
     });
   };
 
   createS3Bucket = (bucketName: string) => {
-    const bucket = new s3.Bucket(this, `${this.domain}-${bucketName}`, {
-      bucketName: `${this.domain}-bucketName`,
+    const bucket = new s3.Bucket(this, `${this.domain}-${bucketName}-bucket`, {
+      bucketName: `${this.domain}-${bucketName}-bucket`,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       cors: [
         {
@@ -160,7 +160,7 @@ export class ImpruviServiceStack extends cdk.Stack {
         tracingEnabled: true,
       },
       resources: new Map<string, HttpMethod[]>([
-        ['/validate-code', [HttpMethod.POST]],
+        ['/validate-invitation-code', [HttpMethod.POST]],
         ['/get-sessions', [HttpMethod.POST]],
         ['/get-video-upload-url', [HttpMethod.POST]],
         ['/create-submission', [HttpMethod.POST]],

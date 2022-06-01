@@ -9,7 +9,7 @@ if (!domain) {
     console.error("a domain must be provided");
     process.exit(1);
 }
-const env = { account: '730511296908', region: 'us-west-2' };
+const env = { account: '522042996447', region: 'us-west-2' };
 
 new ImpruviServiceStack(app, `${domain}-ImpruviServiceStack`, {
     domain: domain,

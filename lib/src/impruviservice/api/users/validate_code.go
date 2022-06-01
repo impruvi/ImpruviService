@@ -9,7 +9,7 @@ import (
 )
 
 type ValidateCodeRequest struct {
-	Code string `json:"code"`
+	InvitationCode string `json:"invitationCode"`
 }
 
 type ValidateCodeResponse struct {
@@ -26,9 +26,9 @@ func ValidateCode(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayP
 		}
 	}
 
-	user, err := users.GetUserByInvitationCode(request.Code)
+	user, err := users.GetUserByInvitationCode(request.InvitationCode)
 	if err != nil {
-		log.Printf("Error getting user by invitatino code: %v\n", err)
+		log.Printf("Error getting user by invitation code: %v\n", err)
 		return &events.APIGatewayProxyResponse{
 			StatusCode: http.StatusInternalServerError,
 		}
