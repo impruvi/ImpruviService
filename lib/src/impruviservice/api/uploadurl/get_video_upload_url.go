@@ -16,20 +16,22 @@ import (
 var S3Client = s3client.NewClient()
 
 type VideoType string
+
 const (
 	Submission VideoType = "Submission"
-	Feedback = "Feedback"
+	Feedback             = "Feedback"
 )
 
 type GetVideoUploadUrlRequest struct {
-	VideoType VideoType `json:"videoType"`
-	UserId string `json:"userId"`
-	SessionNumber int `json:"sessionNumber"`
-	DrillId string `json:"drillId"`
+	VideoType     VideoType `json:"videoType"`
+	UserId        string    `json:"userId"`
+	SessionNumber int       `json:"sessionNumber"`
+	DrillId       string    `json:"drillId"`
 }
 
 type GetVideoUploadUrlResponse struct {
-	Url string `json:"url"`
+	FileLocation string `json:"fileLocation"`
+	UploadUrl    string `json:"uploadUrl"`
 }
 
 func GetVideoUploadUrl(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
@@ -42,9 +44,11 @@ func GetVideoUploadUrl(apiRequest *events.APIGatewayProxyRequest) *events.APIGat
 		}
 	}
 
+	bucketName := getBucketName(request.VideoType)
+	filePath := fmt.Sprintf("%v/%v/%v", request.UserId, request.SessionNumber, request.DrillId)
 	req, _ := S3Client.PutObjectRequest(&s3.PutObjectInput{
-		Bucket: aws.String(getBucketName(request.VideoType)),
-		Key:    aws.String(fmt.Sprintf("%v/%v/%v", request.UserId, request.SessionNumber, request.DrillId)),
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(filePath),
 	})
 	uploadUrl, err := req.Presign(15 * time.Minute)
 	if err != nil {
@@ -55,7 +59,8 @@ func GetVideoUploadUrl(apiRequest *events.APIGatewayProxyRequest) *events.APIGat
 	}
 
 	rspBody, err := json.Marshal(GetVideoUploadUrlResponse{
-		Url: uploadUrl,
+		FileLocation: fmt.Sprintf("https://%s.s3.us-west-2.amazonaws.com/%s", bucketName, filePath),
+		UploadUrl:    uploadUrl,
 	})
 	if err != nil {
 		log.Printf("Error while marshalling response: %v\n", err)
@@ -77,4 +82,3 @@ func getBucketName(videoType VideoType) string {
 		return bucketnames.FeedbackBucket
 	}
 }
-

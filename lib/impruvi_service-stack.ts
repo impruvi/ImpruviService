@@ -38,7 +38,8 @@ export class ImpruviServiceStack extends cdk.Stack {
         {managedPolicyArn: 'arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess'},
         {managedPolicyArn: 'arn:aws:iam::aws:policy/CloudWatchLogsFullAccess'},
         {managedPolicyArn: 'arn:aws:iam::aws:policy/AmazonSQSFullAccess'},
-        {managedPolicyArn: 'arn:aws:iam::aws:policy/AWSLambda_FullAccess'}
+        {managedPolicyArn: 'arn:aws:iam::aws:policy/AWSLambda_FullAccess'},
+        {managedPolicyArn: 'arn:aws:iam::aws:policy/AmazonS3FullAccess'}
       ]
     });
   };
