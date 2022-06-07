@@ -1,7 +1,6 @@
 package api
 
 import (
-	"./drills"
 	"./feedback"
 	"./session"
 	"./submission"
@@ -28,20 +27,16 @@ func RouteRequest(request events.APIGatewayProxyRequest) (events.APIGatewayProxy
 
 	if request.Resource == "/validate-invitation-code" {
 		return *users.ValidateCode(&request), nil
-	} else if request.Resource == "/get-sessions" {
-		return *session.GetSessions(&request), nil
+	} else if request.Resource == "/player/get-sessions" {
+		return *session.GetPlayerSessions(&request), nil
+	} else if request.Resource == "/coach/get-sessions" {
+		return *session.GetCoachSessions(&request), nil
 	} else if request.Resource == "/get-video-upload-url" {
 		return *uploadurl.GetVideoUploadUrl(&request), nil
 	} else if request.Resource == "/create-submission" {
 		return *submission.CreateSubmission(&request), nil
 	} else if request.Resource == "/create-feedback" {
 		return *feedback.CreateFeedback(&request), nil
-	} else if request.Resource == "/get-all-users" {
-		return *users.GetAllUsers(&request), nil
-	} else if request.Resource == "/get-all-drills" {
-		return *drills.GetAllDrills(&request), nil
-	} else if request.Resource == "/update-session" {
-		return *session.UpdateSession(&request), nil
 	}
 
 	return events.APIGatewayProxyResponse{

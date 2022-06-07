@@ -26,6 +26,7 @@ export class ImpruviServiceStack extends cdk.Stack {
     this.createDynamoTables();
     this.createApiResources(iamRole);
     this.createS3Bucket('impruvi-drills');
+    this.createS3Bucket('impruvi-drill-diagrams');
     this.createS3Bucket('impruvi-submissions');
     this.createS3Bucket('impruvi-feedback');
   }
@@ -39,7 +40,8 @@ export class ImpruviServiceStack extends cdk.Stack {
         {managedPolicyArn: 'arn:aws:iam::aws:policy/CloudWatchLogsFullAccess'},
         {managedPolicyArn: 'arn:aws:iam::aws:policy/AmazonSQSFullAccess'},
         {managedPolicyArn: 'arn:aws:iam::aws:policy/AWSLambda_FullAccess'},
-        {managedPolicyArn: 'arn:aws:iam::aws:policy/AmazonS3FullAccess'}
+        {managedPolicyArn: 'arn:aws:iam::aws:policy/AmazonS3FullAccess'},
+        {managedPolicyArn: 'arn:aws:iam::aws:policy/AmazonSNSFullAccess'}
       ]
     });
   };
@@ -55,13 +57,11 @@ export class ImpruviServiceStack extends cdk.Stack {
       indexName: 'invitation-code-index',
       partitionKey: {name: 'invitationCode', type: dynamodb.AttributeType.STRING},
     });
-
-    new dynamodb.Table(this, `${this.domain}-coaches`, {
-      partitionKey: { name: 'coachId', type: dynamodb.AttributeType.STRING},
-      tableName: `${this.domain}-coaches`,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+    usersTable.addGlobalSecondaryIndex({
+      indexName: 'coach-userId-index',
+      partitionKey: {name: 'coachUserId', type: dynamodb.AttributeType.STRING},
     });
+
 
     new dynamodb.Table(this, `${this.domain}-sessions`, {
       partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING},
@@ -162,13 +162,11 @@ export class ImpruviServiceStack extends cdk.Stack {
       },
       resources: new Map<string, HttpMethod[]>([
         ['/validate-invitation-code', [HttpMethod.POST]],
-        ['/get-sessions', [HttpMethod.POST]],
+        ['/player/get-sessions', [HttpMethod.POST]],
+        ['/coach/get-sessions', [HttpMethod.POST]],
         ['/get-video-upload-url', [HttpMethod.POST]],
         ['/create-submission', [HttpMethod.POST]],
         ['/create-feedback', [HttpMethod.POST]],
-        ['/get-all-users', [HttpMethod.POST]],
-        ['/get-all-drills', [HttpMethod.POST]],
-        ['/update-session', [HttpMethod.POST]],
       ])
     });
   };

@@ -2,17 +2,20 @@ package submission
 
 import (
 	"../../dao/session"
+	"../../dao/users"
+	"../../notification"
 	"encoding/json"
+	"fmt"
 	"github.com/aws/aws-lambda-go/events"
 	"log"
 	"net/http"
 )
 
 type CreateSubmissionRequest struct {
-	UserId string `json:"userId"`
-	SessionNumber int `json:"sessionNumber"`
-	DrillId string `json:"drillId"`
-	FileLocation string `json:"fileLocation"`
+	UserId        string `json:"userId"`
+	SessionNumber int    `json:"sessionNumber"`
+	DrillId       string `json:"drillId"`
+	FileLocation  string `json:"fileLocation"`
 }
 
 func CreateSubmission(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
@@ -33,8 +36,14 @@ func CreateSubmission(apiRequest *events.APIGatewayProxyRequest) *events.APIGate
 		}
 	}
 
+	user, err := users.GetUserById(request.UserId)
+	if err == nil {
+		notification.Notify(fmt.Sprintf("%v submitted a video!", user.Name))
+	} else {
+		log.Printf("Error while getting user by id: %v\n", err)
+	}
+
 	return &events.APIGatewayProxyResponse{
 		StatusCode: http.StatusAccepted,
 	}
 }
-

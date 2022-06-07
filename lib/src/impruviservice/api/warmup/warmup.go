@@ -15,7 +15,6 @@ func HandleWarmupEvent() {
 
 	tableNames := []string{
 		tablenames.UsersTable,
-		tablenames.CoachesTable,
 		tablenames.DrillsTable,
 		tablenames.SessionsTable,
 	}

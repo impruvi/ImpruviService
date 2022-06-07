@@ -12,65 +12,72 @@ import (
 var dynamo = dynamoclient.GetClient()
 
 type Category string
+
 const (
 	Dribbling Category = "Dribbling"
-	Warmup = "Warmup"
-	Shooting = "Shooting"
-	Passing = "Passing"
+	Warmup             = "Warmup"
+	Shooting           = "Shooting"
+	Passing            = "Passing"
 )
 
 type Drill struct {
-	DrillId string `json:"drillId"`
-	Name string `json:"name"`
-	Description string `json:"description"`
-	Category Category `json:"category"`
-	Equipment []Equipment `json:"equipment"`
-	Videos DrillVideos `json:"videos"`
+	DrillId             string      `json:"drillId"`
+	Name                string      `json:"name"`
+	Description         string      `json:"description"`
+	Category            Category    `json:"category"`
+	DiagramFileLocation string      `json:"diagramFileLocation"`
+	Equipment           []Equipment `json:"equipment"`
+	Videos              DrillVideos `json:"videos"`
 }
 
 type EquipmentType string
+
 const (
-	Ball EquipmentType = "Ball"
-	Cone = "Cone"
-	Space = "Space"
+	Ball  EquipmentType = "Ball"
+	Cone                = "Cone"
+	Space               = "Space"
 )
+
 type RequirementType string
+
 const (
-	Count RequirementType = "Count"
-	Dimension = "Dimension"
+	Count     RequirementType = "Count"
+	Dimension                 = "Dimension"
 )
+
 type VideoAngle string
+
 const (
-	Front VideoAngle = "Front"
-	Side VideoAngle = "Side"
-	CloseUp = "CloseUp"
+	Front   VideoAngle = "Front"
+	Side    VideoAngle = "Side"
+	CloseUp            = "CloseUp"
 )
 
 type Equipment struct {
 	EquipmentType EquipmentType `json:"equipmentType"`
-	Requirement interface{} `json:"requirement"`
+	Requirement   interface{}   `json:"requirement"`
 }
 
 type Requirement struct {
 	RequirementType RequirementType `json:"requirementType"`
-	Count int `json:"count"`
-	Dimensions Dimensions `json:"dimension"`
+	Count           int             `json:"count"`
+	Dimensions      Dimensions      `json:"dimension"`
 }
 
 // Dimensions in yards
 type Dimensions struct {
-	Width int `json:"width"`
+	Width  int `json:"width"`
 	Height int `json:"height"`
 }
 
 type DrillVideos struct {
-	Front Video `json:"front"`
-	Side Video `json:"side"`
+	Front   Video `json:"front"`
+	Side    Video `json:"side"`
 	CloseUp Video `json:"closeUp"`
 }
 
 type Video struct {
-	 FileLocation string `json:"fileLocation"`
+	FileLocation string `json:"fileLocation"`
 }
 
 func GetAllDrills() ([]*Drill, error) {
@@ -81,7 +88,7 @@ func GetAllDrills() ([]*Drill, error) {
 
 	result, err := dynamo.Scan(&scanInput)
 	if err != nil {
-		return nil, fmt.Errorf("error scanning drills. exclusiveStartKey: %v\n" , err)
+		return nil, fmt.Errorf("error scanning drills. exclusiveStartKey: %v\n", err)
 	}
 
 	drills, err := convertItems(result.Items)
@@ -92,11 +99,11 @@ func GetAllDrills() ([]*Drill, error) {
 	for result.LastEvaluatedKey != nil {
 		scanInput = dynamodb.ScanInput{
 			ExclusiveStartKey: result.LastEvaluatedKey,
-			TableName: aws.String(tablenames.DrillsTable),
+			TableName:         aws.String(tablenames.DrillsTable),
 		}
 		result, err = dynamo.Scan(&scanInput)
 		if err != nil {
-			return nil, fmt.Errorf("error scanning drills. exclusiveStartKey: %v\n" , err)
+			return nil, fmt.Errorf("error scanning drills. exclusiveStartKey: %v\n", err)
 		}
 		drills, err = convertItems(result.Items)
 		for _, drill := range drills {
@@ -142,7 +149,6 @@ func BatchGetDrills(drillIds []string) (map[string]*Drill, error) {
 	}
 	return allDrills, nil
 }
-
 
 func convertItems(items []map[string]*dynamodb.AttributeValue) ([]*Drill, error) {
 	var drills []*Drill

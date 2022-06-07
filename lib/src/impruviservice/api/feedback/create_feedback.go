@@ -2,17 +2,20 @@ package feedback
 
 import (
 	"../../dao/session"
+	"../../dao/users"
+	"../../notification"
 	"encoding/json"
+	"fmt"
 	"github.com/aws/aws-lambda-go/events"
 	"log"
 	"net/http"
 )
 
 type CreateFeedbackRequest struct {
-	UserId string `json:"userId"`
-	SessionNumber int `json:"sessionNumber"`
-	DrillId string `json:"drillId"`
-	FileLocation string `json:"fileLocation"`
+	UserId        string `json:"userId"`
+	SessionNumber int    `json:"sessionNumber"`
+	DrillId       string `json:"drillId"`
+	FileLocation  string `json:"fileLocation"`
 }
 
 func CreateFeedback(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
@@ -31,6 +34,14 @@ func CreateFeedback(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewa
 		return &events.APIGatewayProxyResponse{
 			StatusCode: http.StatusInternalServerError,
 		}
+	}
+
+	user, err := users.GetUserById(request.UserId)
+	coach, err := users.GetUserById(user.CoachUserId)
+	if err == nil {
+		notification.Notify(fmt.Sprintf("%v submitted feedback!", coach.Name))
+	} else {
+		log.Printf("Error while sending text notification: %v\n", err)
 	}
 
 	return &events.APIGatewayProxyResponse{
