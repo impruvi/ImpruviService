@@ -2,14 +2,14 @@ package uploadurl
 
 import (
 	"../../awsclients/s3client"
-	"../../constants/bucketnames"
+	"../../files"
+	"../converter"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"log"
-	"net/http"
 	"time"
 )
 
@@ -18,67 +18,85 @@ var S3Client = s3client.NewClient()
 type VideoType string
 
 const (
-	Submission VideoType = "Submission"
-	Feedback             = "Feedback"
+	Submission VideoType = "SUBMISSION" // playerId/sessionNumber/drillId
+	Feedback             = "FEEDBACK"   // playerId/sessionNumber/drillId
+	Demo                 = "DEMO"       // drillId
 )
 
 type GetVideoUploadUrlRequest struct {
-	VideoType     VideoType `json:"videoType"`
-	UserId        string    `json:"userId"`
-	SessionNumber int       `json:"sessionNumber"`
-	DrillId       string    `json:"drillId"`
+	VideoType        VideoType                             `json:"videoType"`
+	SubmissionParams SubmissionVideoUploadUrlRequestParams `json:"submissionParams"`
+	FeedbackParams   FeedbackVideoUploadUrlRequestParams   `json:"feedbackParams"`
+	DemoParams       DemoVideoUploadUrlRequestParams       `json:"demoParams"`
+}
+
+type SubmissionVideoUploadUrlRequestParams struct {
+	PlayerId      string `json:"playerId"`
+	SessionNumber int    `json:"sessionNumber"`
+	DrillId       string `json:"drillId"`
+}
+
+type FeedbackVideoUploadUrlRequestParams struct {
+	PlayerId      string `json:"playerId"`
+	SessionNumber int    `json:"sessionNumber"`
+	DrillId       string `json:"drillId"`
+}
+
+type DemoVideoUploadUrlRequestParams struct {
+	DrillId string      `json:"drillId"`
+	Angle   files.Angle `json:"angle"` // FRONT/SIDE/CLOSE
 }
 
 type GetVideoUploadUrlResponse struct {
-	FileLocation string `json:"fileLocation"`
-	UploadUrl    string `json:"uploadUrl"`
+	UploadUrl string `json:"uploadUrl"`
 }
 
 func GetVideoUploadUrl(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
 	var request GetVideoUploadUrlRequest
 	var err = json.Unmarshal([]byte(apiRequest.Body), &request)
 	if err != nil {
-		log.Printf("Error unmarshalling request: %v\n", err)
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusBadRequest,
-		}
+		return converter.BadRequest("Error unmarshalling request: %v\n", err)
 	}
 
-	bucketName := getBucketName(request.VideoType)
-	filePath := fmt.Sprintf("%v/%v/%v", request.UserId, request.SessionNumber, request.DrillId)
+	fileLocation, err := getFileLocation(request)
+	if err != nil {
+		return converter.BadRequest(err.Error())
+	}
+
 	req, _ := S3Client.PutObjectRequest(&s3.PutObjectInput{
-		Bucket: aws.String(bucketName),
-		Key:    aws.String(filePath),
+		Bucket: aws.String(fileLocation.BucketName),
+		Key:    aws.String(fileLocation.Key),
 	})
 	uploadUrl, err := req.Presign(15 * time.Minute)
 	if err != nil {
-		log.Printf("Error while creating presigned url: %v\n", err)
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-		}
+		return converter.InternalServiceError("Error while creating presigned url: %v\n", err)
 	}
 
-	rspBody, err := json.Marshal(GetVideoUploadUrlResponse{
-		FileLocation: fmt.Sprintf("https://%s.s3.us-west-2.amazonaws.com/%s", bucketName, filePath),
-		UploadUrl:    uploadUrl,
+	return converter.Success(GetVideoUploadUrlResponse{
+		UploadUrl: uploadUrl,
 	})
-	if err != nil {
-		log.Printf("Error while marshalling response: %v\n", err)
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-		}
-	}
-
-	return &events.APIGatewayProxyResponse{
-		Body:       string(rspBody),
-		StatusCode: http.StatusAccepted,
-	}
 }
 
-func getBucketName(videoType VideoType) string {
-	if videoType == Submission {
-		return bucketnames.SubmissionsBucket
-	} else {
-		return bucketnames.FeedbackBucket
+func getFileLocation(request GetVideoUploadUrlRequest) (*files.FileLocation, error) {
+	switch request.VideoType {
+	case Feedback:
+		return files.GetFeedbackVideoFileLocation(
+			request.FeedbackParams.PlayerId,
+			request.FeedbackParams.SessionNumber,
+			request.FeedbackParams.DrillId,
+		), nil
+	case Submission:
+		return files.GetSubmissionVideoFileLocation(
+			request.SubmissionParams.PlayerId,
+			request.SubmissionParams.SessionNumber,
+			request.SubmissionParams.DrillId,
+		), nil
+	case Demo:
+		return files.GetDrillVideoFileLocation(
+			request.DemoParams.DrillId,
+			request.DemoParams.Angle,
+		), nil
+	default:
+		return nil, errors.New(fmt.Sprintf("Unsupported video type: %v\n", request.VideoType))
 	}
 }

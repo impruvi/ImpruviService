@@ -1,50 +1,48 @@
 package feedback
 
 import (
+	"../../dao/coaches"
+	"../../dao/players"
 	"../../dao/session"
-	"../../dao/users"
 	"../../notification"
+	"../converter"
 	"encoding/json"
 	"fmt"
 	"github.com/aws/aws-lambda-go/events"
 	"log"
-	"net/http"
 )
 
 type CreateFeedbackRequest struct {
-	UserId        string `json:"userId"`
+	CoachId       string `json:"coachId"`
+	PlayerId      string `json:"playerId"`
 	SessionNumber int    `json:"sessionNumber"`
 	DrillId       string `json:"drillId"`
-	FileLocation  string `json:"fileLocation"`
 }
 
 func CreateFeedback(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
 	var request CreateFeedbackRequest
 	var err = json.Unmarshal([]byte(apiRequest.Body), &request)
 	if err != nil {
-		log.Printf("Error unmarshalling request: %v\n", err)
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusBadRequest,
-		}
+		return converter.BadRequest("Error unmarshalling request: %v\n", err)
 	}
 
-	err = session.CreateFeedback(request.SessionNumber, request.UserId, request.DrillId, request.FileLocation)
+	err = session.CreateFeedback(request.SessionNumber, request.CoachId, request.DrillId)
 	if err != nil {
-		log.Printf("Error while creating feedback: %v\n", err)
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-		}
+		return converter.InternalServiceError("Error while creating feedback: %v\n", err)
 	}
 
-	user, err := users.GetUserById(request.UserId)
-	coach, err := users.GetUserById(user.CoachUserId)
+	sendNotifications(request.CoachId, request.PlayerId)
+
+	return converter.Success(nil)
+}
+
+func sendNotifications(coachId, playerId string) {
+	coach, err := coaches.GetCoachById(coachId)
+	player, err := players.GetPlayerById(playerId)
 	if err == nil {
-		notification.Notify(fmt.Sprintf("%v submitted feedback!", coach.Name))
+		notification.Notify(fmt.Sprintf("%v %v submitted feedback for %v %v", coach.FirstName, coach.LastName, player.FirstName, player.LastName))
 	} else {
+		// don't fail the request just because we failed to send the notifications
 		log.Printf("Error while sending text notification: %v\n", err)
-	}
-
-	return &events.APIGatewayProxyResponse{
-		StatusCode: http.StatusAccepted,
 	}
 }

@@ -1,50 +1,32 @@
 package session
 
 import (
+	"../converter"
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
-	"log"
-	"net/http"
 )
 
 type GetPlayerSessionsRequest struct {
-	UserId string `json:"userId"`
+	PlayerId string `json:"playerId"`
 }
 
 type GetPlayerSessionsResponse struct {
-	Sessions []*Session `json:"sessions"`
+	Sessions []*FullSession `json:"sessions"`
 }
 
 func GetPlayerSessions(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
 	var request GetPlayerSessionsRequest
 	var err = json.Unmarshal([]byte(apiRequest.Body), &request)
 	if err != nil {
-		log.Printf("Error unmarshalling request: %v\n", err)
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusBadRequest,
-		}
+		return converter.BadRequest("Error unmarshalling request: %v\n", err)
 	}
 
-	sessionsWithDrills, err := getSessionsWithDrillsForUser(request.UserId)
+	sessionsWithDrills, err := getFullSessionsForPlayer(request.PlayerId)
 	if err != nil {
-		log.Printf("Error while getting drills for sessions for userId: %v, %v\n", request.UserId, err)
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-		}
+		return converter.InternalServiceError("Error while getting full sessions for player with id: %v, %v\n", request.PlayerId, err)
 	}
 
-	rspBody, err := json.Marshal(GetPlayerSessionsResponse{
+	return converter.Success(GetPlayerSessionsResponse{
 		Sessions: sessionsWithDrills,
 	})
-	if err != nil {
-		log.Printf("Error while marshalling response: %v\n", err)
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-		}
-	}
-
-	return &events.APIGatewayProxyResponse{
-		Body:       string(rspBody),
-		StatusCode: http.StatusAccepted,
-	}
 }

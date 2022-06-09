@@ -3,21 +3,22 @@ package session
 import (
 	"../../dao/drills"
 	"../../dao/session"
+	"../../files"
 )
 
-func getSessionsWithDrillsForUser(userId string) ([]*Session, error) {
-	sessions, err := session.GetSessions(userId)
+func getFullSessionsForPlayer(playerId string) ([]*FullSession, error) {
+	sessions, err := session.GetSessions(playerId)
 	if err != nil {
 		return nil, err
 	}
 
-	return getSessionsWithDrills(sessions)
+	return getFullSessions(sessions)
 }
 
-func getSessionsWithDrills(sessions []*session.Session) ([]*Session, error) {
-	sessionsWithDrills := make([]*Session, 0)
+func getFullSessions(sessions []*session.Session) ([]*FullSession, error) {
+	sessionsWithDrills := make([]*FullSession, 0)
 	for _, sess := range sessions {
-		sessionWithDrill, err := getSessionWithDrills(sess)
+		sessionWithDrill, err := getFullSession(sess)
 		if err != nil {
 			return nil, err
 		}
@@ -26,27 +27,38 @@ func getSessionsWithDrills(sessions []*session.Session) ([]*Session, error) {
 	return sessionsWithDrills, nil
 }
 
-func getSessionWithDrills(sess *session.Session) (*Session, error) {
+func getFullSession(sess *session.Session) (*FullSession, error) {
 	drillIds := getDrillIds(sess.Drills)
 	drillDetails, err := drills.BatchGetDrills(drillIds)
 	if err != nil {
 		return nil, err
 	}
 
-	fullDrills := make([]*Drill, 0)
-	for _, drill := range sess.Drills {
-		fullDrills = append(fullDrills, &Drill{
-			Drill:           *drillDetails[drill.DrillId],
-			Submission:      drill.Submission,
-			Feedback:        drill.Feedback,
-			Tips:            drill.Tips,
-			Repetitions:     drill.Repetitions,
-			DurationMinutes: drill.DurationMinutes,
+	fullDrills := make([]*FullDrill, 0)
+	for _, sessionDrill := range sess.Drills {
+		drill := drillDetails[sessionDrill.DrillId]
+		fullDrills = append(fullDrills, &FullDrill{
+			DrillId:                  drill.DrillId,
+			CoachId:                  drill.CoachId,
+			Name:                     drill.Name,
+			Description:              drill.Description,
+			Category:                 drill.Category,
+			Equipment:                drill.Equipment,
+			Submission:               sessionDrill.Submission,
+			Feedback:                 sessionDrill.Feedback,
+			Notes:                    sessionDrill.Notes,
+			EstimatedDurationMinutes: sessionDrill.EstimatedDurationMinutes,
+			Prescription:             sessionDrill.Prescription,
+			Demos: Demos{
+				Front: Demo{FileLocation: files.GetDrillVideoFileLocation(drill.DrillId, files.Front).URL},
+				Side:  Demo{FileLocation: files.GetDrillVideoFileLocation(drill.DrillId, files.Side).URL},
+				Close: Demo{FileLocation: files.GetDrillVideoFileLocation(drill.DrillId, files.Close).URL},
+			},
 		})
 	}
 
-	return &Session{
-		UserId:        sess.UserId,
+	return &FullSession{
+		PlayerId:      sess.PlayerId,
 		SessionNumber: sess.SessionNumber,
 		Drills:        fullDrills,
 	}, nil

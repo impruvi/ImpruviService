@@ -1,15 +1,14 @@
 package session
 
 import (
-	"../../dao/users"
+	"../../dao/players"
+	"../converter"
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
-	"log"
-	"net/http"
 )
 
 type GetCoachSessionsRequest struct {
-	UserId string `json:"userId"`
+	CoachId string `json:"coachId"`
 }
 
 type GetCoachSessionsResponse struct {
@@ -17,51 +16,43 @@ type GetCoachSessionsResponse struct {
 }
 
 type PlayerSessions struct {
-	User     *users.User `json:"user"`
-	Sessions []*Session  `json:"sessions"`
+	Player   *players.Player `json:"player"`
+	Sessions []*FullSession  `json:"sessions"`
 }
 
 func GetCoachSessions(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
 	var request GetPlayerSessionsRequest
 	var err = json.Unmarshal([]byte(apiRequest.Body), &request)
 	if err != nil {
-		log.Printf("Error unmarshalling request: %v\n", err)
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusBadRequest,
-		}
+		return converter.BadRequest("Error unmarshalling request: %v\n", err)
 	}
 
-	playersForCoach, err := users.GetPlayersForCoach(request.UserId)
-	log.Printf("Players for coach: %v\n", playersForCoach)
+	playersForCoach, err := players.GetPlayersForCoach(request.PlayerId)
+	if err != nil {
+		return converter.InternalServiceError("Error while players for coach: %v. %v\n", request.PlayerId, err)
+	}
+	playerSessions, err := getPlayerSessions(playersForCoach)
+	if err != nil {
+		return converter.InternalServiceError("Error while getting player sessions for players: %v. %v\n", playersForCoach, err)
+	}
 
+	return converter.Success(GetCoachSessionsResponse{
+		PlayerSessions: playerSessions,
+	})
+}
+
+func getPlayerSessions(playersForCoach []*players.Player) ([]*PlayerSessions, error) {
 	playerSessions := make([]*PlayerSessions, 0)
 	for _, player := range playersForCoach {
-		sessionsWithDrills, err := getSessionsWithDrillsForUser(player.UserId)
+		sessionsWithDrills, err := getFullSessionsForPlayer(player.PlayerId)
 		if err != nil {
-			log.Printf("Error while getting sessions with drills for user: %v. %v\n", player, err)
-			return &events.APIGatewayProxyResponse{
-				StatusCode: http.StatusInternalServerError,
-			}
+			return nil, err
 		}
 
 		playerSessions = append(playerSessions, &PlayerSessions{
-			User:     player,
+			Player:   player,
 			Sessions: sessionsWithDrills,
 		})
 	}
-
-	rspBody, err := json.Marshal(GetCoachSessionsResponse{
-		PlayerSessions: playerSessions,
-	})
-	if err != nil {
-		log.Printf("Error while marshalling response: %v\n", err)
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-		}
-	}
-
-	return &events.APIGatewayProxyResponse{
-		Body:       string(rspBody),
-		StatusCode: http.StatusAccepted,
-	}
+	return playerSessions, nil
 }

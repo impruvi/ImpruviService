@@ -47,35 +47,48 @@ export class ImpruviServiceStack extends cdk.Stack {
   };
 
   createDynamoTables = () => {
-    const usersTable = new dynamodb.Table(this, `${this.domain}-users`, {
-      partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING},
-      tableName: `${this.domain}-users`,
+    const playersTable = new dynamodb.Table(this, `${this.domain}-players`, {
+      partitionKey: { name: 'playerId', type: dynamodb.AttributeType.STRING},
+      tableName: `${this.domain}-players`,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
     });
-    usersTable.addGlobalSecondaryIndex({
-      indexName: 'invitation-code-index',
-      partitionKey: {name: 'invitationCode', type: dynamodb.AttributeType.STRING},
-    });
-    usersTable.addGlobalSecondaryIndex({
-      indexName: 'coach-userId-index',
-      partitionKey: {name: 'coachUserId', type: dynamodb.AttributeType.STRING},
+    playersTable.addGlobalSecondaryIndex({
+      indexName: 'coachId-index',
+      partitionKey: {name: 'coachId', type: dynamodb.AttributeType.STRING},
     });
 
+    new dynamodb.Table(this, `${this.domain}-coaches`, {
+      partitionKey: { name: 'coachId', type: dynamodb.AttributeType.STRING},
+      tableName: `${this.domain}-coaches`,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+    });
+
+    new dynamodb.Table(this, `${this.domain}-invitation-codes`, {
+      partitionKey: { name: 'invitationCode', type: dynamodb.AttributeType.STRING},
+      tableName: `${this.domain}-invitation-codes`,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+    });
 
     new dynamodb.Table(this, `${this.domain}-sessions`, {
-      partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING},
+      partitionKey: { name: 'playerId', type: dynamodb.AttributeType.STRING},
       sortKey: { name: 'sessionNumber', type: dynamodb.AttributeType.NUMBER},
       tableName: `${this.domain}-sessions`,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
     });
 
-    new dynamodb.Table(this, `${this.domain}-drills`, {
+    const drillsTable = new dynamodb.Table(this, `${this.domain}-drills`, {
       partitionKey: { name: 'drillId', type: dynamodb.AttributeType.STRING},
       tableName: `${this.domain}-drills`,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+    });
+    drillsTable.addGlobalSecondaryIndex({
+      indexName: 'coachId-index',
+      partitionKey: {name: 'coachId', type: dynamodb.AttributeType.STRING},
     });
   };
 
@@ -167,6 +180,13 @@ export class ImpruviServiceStack extends cdk.Stack {
         ['/get-video-upload-url', [HttpMethod.POST]],
         ['/create-submission', [HttpMethod.POST]],
         ['/create-feedback', [HttpMethod.POST]],
+        ['/create-drill', [HttpMethod.POST]],
+        ['/update-drill', [HttpMethod.POST]],
+        ['/delete-drill', [HttpMethod.POST]],
+        ['/get-drills-for-coach', [HttpMethod.POST]],
+        ['/delete-session', [HttpMethod.POST]],
+        ['/create-session', [HttpMethod.POST]],
+        ['/update-session', [HttpMethod.POST]],
       ])
     });
   };

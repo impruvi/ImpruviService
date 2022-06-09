@@ -1,11 +1,12 @@
 package users
 
 import (
-	"../../dao/users"
+	"../../dao/coaches"
+	"../../dao/invitationcodes"
+	"../../dao/players"
+	"../converter"
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
-	"log"
-	"net/http"
 )
 
 type ValidateCodeRequest struct {
@@ -13,39 +14,40 @@ type ValidateCodeRequest struct {
 }
 
 type ValidateCodeResponse struct {
-	User *users.User `json:"user"`
+	UserType invitationcodes.UserType `json:"userType"` // PLAYER/COACH
+	Player   *players.Player          `json:"player"`
+	Coach    *coaches.Coach           `json:"coach"`
 }
 
 func ValidateCode(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
 	var request ValidateCodeRequest
 	var err = json.Unmarshal([]byte(apiRequest.Body), &request)
 	if err != nil {
-		log.Printf("Error unmarshalling request: %v\n", err)
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusBadRequest,
-		}
+		converter.BadRequest("Error unmarshalling request: %v\n", err)
 	}
 
-	user, err := users.GetUserByInvitationCode(request.InvitationCode)
+	invitationCodeEntry, err := invitationcodes.GetInvitationCodeEntry(request.InvitationCode)
 	if err != nil {
-		log.Printf("Error getting user by invitation code: %v\n", err)
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-		}
+		return converter.InternalServiceError("Error getting invitation code entry: %v\n", err)
 	}
 
-	rspBody, err := json.Marshal(ValidateCodeResponse{
-		User: user,
-	})
-	if err != nil {
-		log.Printf("Error while marshalling response: %v\n", err)
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
+	if invitationCodeEntry.UserType == invitationcodes.Coach {
+		coach, err := coaches.GetCoachById(invitationCodeEntry.UserId)
+		if err != nil {
+			return converter.InternalServiceError("Error getting coach by coachId: %v\n", err)
 		}
-	}
-
-	return &events.APIGatewayProxyResponse{
-		Body:       string(rspBody),
-		StatusCode: http.StatusAccepted,
+		return converter.Success(ValidateCodeResponse{
+			UserType: invitationCodeEntry.UserType,
+			Coach:    coach,
+		})
+	} else {
+		player, err := players.GetPlayerById(invitationCodeEntry.UserId)
+		if err != nil {
+			return converter.InternalServiceError("Error getting player by playerId: %v\n", err)
+		}
+		return converter.Success(ValidateCodeResponse{
+			UserType: invitationCodeEntry.UserType,
+			Player:   player,
+		})
 	}
 }

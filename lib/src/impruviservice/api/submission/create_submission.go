@@ -1,49 +1,45 @@
 package submission
 
 import (
+	"../../dao/players"
 	"../../dao/session"
-	"../../dao/users"
 	"../../notification"
+	"../converter"
 	"encoding/json"
 	"fmt"
 	"github.com/aws/aws-lambda-go/events"
 	"log"
-	"net/http"
 )
 
 type CreateSubmissionRequest struct {
-	UserId        string `json:"userId"`
+	PlayerId      string `json:"playerId"`
 	SessionNumber int    `json:"sessionNumber"`
 	DrillId       string `json:"drillId"`
-	FileLocation  string `json:"fileLocation"`
 }
 
 func CreateSubmission(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
 	var request CreateSubmissionRequest
 	var err = json.Unmarshal([]byte(apiRequest.Body), &request)
 	if err != nil {
-		log.Printf("Error unmarshalling request: %v\n", err)
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusBadRequest,
-		}
+		return converter.BadRequest("Error unmarshalling request: %v\n", err)
 	}
 
-	err = session.CreateSubmission(request.SessionNumber, request.UserId, request.DrillId, request.FileLocation)
+	err = session.CreateSubmission(request.SessionNumber, request.PlayerId, request.DrillId)
 	if err != nil {
-		log.Printf("Error while creating submission: %v\n", err)
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-		}
+		return converter.InternalServiceError("Error while creating submission: %v\n", err)
 	}
 
-	user, err := users.GetUserById(request.UserId)
+	sendNotifications(request.PlayerId)
+
+	return converter.Success(nil)
+}
+
+func sendNotifications(playerId string) {
+	player, err := players.GetPlayerById(playerId)
 	if err == nil {
-		notification.Notify(fmt.Sprintf("%v submitted a video!", user.Name))
+		notification.Notify(fmt.Sprintf("%v %v submitted a video!", player.FirstName, player.LastName))
 	} else {
+		// don't fail the request just because we failed to send the notifications
 		log.Printf("Error while getting user by id: %v\n", err)
-	}
-
-	return &events.APIGatewayProxyResponse{
-		StatusCode: http.StatusAccepted,
 	}
 }

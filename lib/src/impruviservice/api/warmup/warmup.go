@@ -14,7 +14,9 @@ func HandleWarmupEvent() {
 	dynamo := dynamoclient.GetClient()
 
 	tableNames := []string{
-		tablenames.UsersTable,
+		tablenames.InvitationCodesTable,
+		tablenames.PlayersTable,
+		tablenames.CoachesTable,
 		tablenames.DrillsTable,
 		tablenames.SessionsTable,
 	}
