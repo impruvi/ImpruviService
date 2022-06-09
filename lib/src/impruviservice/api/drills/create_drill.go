@@ -18,7 +18,7 @@ func CreateDrill(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayPr
 		return converter.BadRequest("Error unmarshalling request: %v\n", err)
 	}
 
-	err = drills.PutDrill(request.Drill)
+	err = drills.CreateDrill(request.Drill)
 	if err != nil {
 		return converter.InternalServiceError("Error while creating drill: %v. %v\n", request.Drill, err)
 	}

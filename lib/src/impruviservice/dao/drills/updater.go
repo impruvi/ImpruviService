@@ -5,7 +5,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/google/uuid"
 )
+
+func CreateDrill(drill *Drill) error {
+	drillId := uuid.New()
+	drill.DrillId = drillId.String()
+	return PutDrill(drill)
+}
 
 func PutDrill(drill *Drill) error {
 	av, err := dynamodbattribute.MarshalMap(drill)
