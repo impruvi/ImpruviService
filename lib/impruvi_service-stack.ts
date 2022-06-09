@@ -175,18 +175,20 @@ export class ImpruviServiceStack extends cdk.Stack {
       },
       resources: new Map<string, HttpMethod[]>([
         ['/validate-invitation-code', [HttpMethod.POST]],
-        ['/player/get-sessions', [HttpMethod.POST]],
-        ['/coach/get-sessions', [HttpMethod.POST]],
+        ['/sessions/player/get', [HttpMethod.POST]],
+        ['/sessions/coach/get', [HttpMethod.POST]],
+        ['/sessions/delete', [HttpMethod.POST]],
+        ['/sessions/create', [HttpMethod.POST]],
+        ['/sessions/update', [HttpMethod.POST]],
+        ['/sessions/submission/create', [HttpMethod.POST]],
+        ['/sessions/feedback/create', [HttpMethod.POST]],
+
+        ['/drills/create', [HttpMethod.POST]],
+        ['/drills/update', [HttpMethod.POST]],
+        ['/drills/delete', [HttpMethod.POST]],
+        ['/drills/coach/get', [HttpMethod.POST]],
+
         ['/get-video-upload-url', [HttpMethod.POST]],
-        ['/create-submission', [HttpMethod.POST]],
-        ['/create-feedback', [HttpMethod.POST]],
-        ['/create-drill', [HttpMethod.POST]],
-        ['/update-drill', [HttpMethod.POST]],
-        ['/delete-drill', [HttpMethod.POST]],
-        ['/get-drills-for-coach', [HttpMethod.POST]],
-        ['/delete-session', [HttpMethod.POST]],
-        ['/create-session', [HttpMethod.POST]],
-        ['/update-session', [HttpMethod.POST]],
       ])
     });
   };

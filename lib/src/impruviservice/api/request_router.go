@@ -28,30 +28,30 @@ func RouteRequest(request events.APIGatewayProxyRequest) (events.APIGatewayProxy
 
 	if request.Resource == "/validate-invitation-code" {
 		return *users.ValidateCode(&request), nil
-	} else if request.Resource == "/player/get-sessions" {
+	} else if request.Resource == "/sessions/player/get" {
 		return *session.GetPlayerSessions(&request), nil
-	} else if request.Resource == "/coach/get-sessions" {
+	} else if request.Resource == "/sessions/coach/get" {
 		return *session.GetCoachSessions(&request), nil
+	} else if request.Resource == "/sessions/create-submission" {
+		return *submission.CreateSubmission(&request), nil
+	} else if request.Resource == "/sessions/create-feedback" {
+		return *feedback.CreateFeedback(&request), nil
+	} else if request.Resource == "/sessions/create" {
+		return *session.CreateSession(&request), nil
+	} else if request.Resource == "/sessions/update" {
+		return *session.UpdateSession(&request), nil
+	} else if request.Resource == "/sessions/delete" {
+		return *session.DeleteSession(&request), nil
+	} else if request.Resource == "/drills/create" {
+		return *drills.CreateDrill(&request), nil
+	} else if request.Resource == "/drills/update" {
+		return *drills.UpdateDrill(&request), nil
+	} else if request.Resource == "/drills/delete" {
+		return *drills.DeleteDrill(&request), nil
+	} else if request.Resource == "/drills/coach/get" {
+		return *drills.GetDrillsForCoach(&request), nil
 	} else if request.Resource == "/get-video-upload-url" {
 		return *uploadurl.GetVideoUploadUrl(&request), nil
-	} else if request.Resource == "/create-submission" {
-		return *submission.CreateSubmission(&request), nil
-	} else if request.Resource == "/create-feedback" {
-		return *feedback.CreateFeedback(&request), nil
-	} else if request.Resource == "/create-drill" {
-		return *drills.CreateDrill(&request), nil
-	} else if request.Resource == "/update-drill" {
-		return *drills.UpdateDrill(&request), nil
-	} else if request.Resource == "/delete-drill" {
-		return *drills.DeleteDrill(&request), nil
-	} else if request.Resource == "/get-drills-for-coach" {
-		return *drills.GetDrillsForCoach(&request), nil
-	} else if request.Resource == "/create-session" {
-		return *session.CreateSession(&request), nil
-	} else if request.Resource == "/update-session" {
-		return *session.UpdateSession(&request), nil
-	} else if request.Resource == "/delete-session" {
-		return *session.DeleteSession(&request), nil
 	}
 
 	return events.APIGatewayProxyResponse{
