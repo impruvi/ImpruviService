@@ -189,6 +189,7 @@ export class ImpruviServiceStack extends cdk.Stack {
         ['/drills/coach/get', [HttpMethod.POST]],
 
         ['/get-video-upload-url', [HttpMethod.POST]],
+        ['/get-video-thumbnail-upload-url', [HttpMethod.POST]],
       ])
     });
   };

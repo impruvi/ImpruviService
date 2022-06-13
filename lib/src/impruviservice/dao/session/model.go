@@ -16,17 +16,11 @@ type Session struct {
 }
 
 type Drill struct {
-	DrillId                  string       `json:"drillId"`
-	Submission               *Submission  `json:"submission"`
-	Feedback                 *Feedback    `json:"feedback"`
-	Notes                    string       `json:"notes"`
-	EstimatedDurationMinutes int          `json:"estimatedDurationMinutes"`
-	Prescription             Prescription `json:"prescription"`
-}
-
-type Prescription struct {
-	Type  string `json:"type"` // REPETITIONS/DURATION_MINUTES
-	Value int    `json:"value"`
+	DrillId                  string      `json:"drillId"`
+	Submission               *Submission `json:"submission"`
+	Feedback                 *Feedback   `json:"feedback"`
+	Notes                    string      `json:"notes"`
+	EstimatedDurationMinutes int         `json:"estimatedDurationMinutes"`
 }
 
 type Submission struct {

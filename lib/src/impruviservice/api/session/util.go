@@ -4,6 +4,7 @@ import (
 	"../../dao/drills"
 	"../../dao/session"
 	"../../files"
+	"log"
 )
 
 func getFullSessionsForPlayer(playerId string) ([]*FullSession, error) {
@@ -11,20 +12,23 @@ func getFullSessionsForPlayer(playerId string) ([]*FullSession, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("Sessions: %v\n", sessions)
 
 	return getFullSessions(sessions)
 }
 
 func getFullSessions(sessions []*session.Session) ([]*FullSession, error) {
-	sessionsWithDrills := make([]*FullSession, 0)
+	log.Printf("Getting full sessions: %v\n", sessions)
+	fullSessions := make([]*FullSession, 0)
 	for _, sess := range sessions {
-		sessionWithDrill, err := getFullSession(sess)
+		fullSession, err := getFullSession(sess)
+		log.Printf("full session: %v\n", fullSession)
 		if err != nil {
 			return nil, err
 		}
-		sessionsWithDrills = append(sessionsWithDrills, sessionWithDrill)
+		fullSessions = append(fullSessions, fullSession)
 	}
-	return sessionsWithDrills, nil
+	return fullSessions, nil
 }
 
 func getFullSession(sess *session.Session) (*FullSession, error) {
@@ -37,6 +41,20 @@ func getFullSession(sess *session.Session) (*FullSession, error) {
 	fullDrills := make([]*FullDrill, 0)
 	for _, sessionDrill := range sess.Drills {
 		drill := drillDetails[sessionDrill.DrillId]
+		var feedback Media
+		if sessionDrill.Feedback != nil && sessionDrill.Feedback.VideoUploadDateEpochMillis > 0 {
+			feedback = Media{
+				VideoUploadDateEpochMillis: sessionDrill.Feedback.VideoUploadDateEpochMillis,
+				FileLocation:               files.GetFeedbackVideoFileLocation(sess.PlayerId, sess.SessionNumber, drill.DrillId).URL,
+			}
+		}
+		var submission Media
+		if sessionDrill.Submission != nil && sessionDrill.Submission.VideoUploadDateEpochMillis > 0 {
+			submission = Media{
+				VideoUploadDateEpochMillis: sessionDrill.Submission.VideoUploadDateEpochMillis,
+				FileLocation:               files.GetSubmissionVideoFileLocation(sess.PlayerId, sess.SessionNumber, drill.DrillId).URL,
+			}
+		}
 		fullDrills = append(fullDrills, &FullDrill{
 			DrillId:                  drill.DrillId,
 			CoachId:                  drill.CoachId,
@@ -44,15 +62,17 @@ func getFullSession(sess *session.Session) (*FullSession, error) {
 			Description:              drill.Description,
 			Category:                 drill.Category,
 			Equipment:                drill.Equipment,
-			Submission:               sessionDrill.Submission,
-			Feedback:                 sessionDrill.Feedback,
+			Submission:               submission,
+			Feedback:                 feedback,
 			Notes:                    sessionDrill.Notes,
 			EstimatedDurationMinutes: sessionDrill.EstimatedDurationMinutes,
-			Prescription:             sessionDrill.Prescription,
 			Demos: Demos{
-				Front: Demo{FileLocation: files.GetDrillVideoFileLocation(drill.DrillId, files.Front).URL},
-				Side:  Demo{FileLocation: files.GetDrillVideoFileLocation(drill.DrillId, files.Side).URL},
-				Close: Demo{FileLocation: files.GetDrillVideoFileLocation(drill.DrillId, files.Close).URL},
+				Front:          Media{FileLocation: files.GetDemoVideoFileLocation(drill.DrillId, files.Front).URL},
+				Side:           Media{FileLocation: files.GetDemoVideoFileLocation(drill.DrillId, files.Side).URL},
+				Close:          Media{FileLocation: files.GetDemoVideoFileLocation(drill.DrillId, files.Close).URL},
+				FrontThumbnail: Media{FileLocation: files.GetDemoVideoThumbnailFileLocation(drill.DrillId, files.Front).URL},
+				SideThumbnail:  Media{FileLocation: files.GetDemoVideoThumbnailFileLocation(drill.DrillId, files.Side).URL},
+				CloseThumbnail: Media{FileLocation: files.GetDemoVideoThumbnailFileLocation(drill.DrillId, files.Close).URL},
 			},
 		})
 	}

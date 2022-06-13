@@ -10,7 +10,7 @@ import (
 
 func GetCoachById(coachId string) (*Coach, error) {
 	result, err := dynamo.GetItem(&dynamodb.GetItemInput{
-		TableName: aws.String(tablenames.PlayersTable),
+		TableName: aws.String(tablenames.CoachesTable),
 		Key: map[string]*dynamodb.AttributeValue{
 			coachIdAttr: {S: aws.String(coachId)},
 		},

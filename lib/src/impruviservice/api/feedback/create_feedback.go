@@ -26,7 +26,7 @@ func CreateFeedback(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewa
 		return converter.BadRequest("Error unmarshalling request: %v\n", err)
 	}
 
-	err = session.CreateFeedback(request.SessionNumber, request.CoachId, request.DrillId)
+	err = session.CreateFeedback(request.SessionNumber, request.PlayerId, request.DrillId)
 	if err != nil {
 		return converter.InternalServiceError("Error while creating feedback: %v\n", err)
 	}

@@ -58,7 +58,7 @@ func GetVideoUploadUrl(apiRequest *events.APIGatewayProxyRequest) *events.APIGat
 		return converter.BadRequest("Error unmarshalling request: %v\n", err)
 	}
 
-	fileLocation, err := getFileLocation(request)
+	fileLocation, err := getVideoFileLocation(request)
 	if err != nil {
 		return converter.BadRequest(err.Error())
 	}
@@ -77,7 +77,7 @@ func GetVideoUploadUrl(apiRequest *events.APIGatewayProxyRequest) *events.APIGat
 	})
 }
 
-func getFileLocation(request GetVideoUploadUrlRequest) (*files.FileLocation, error) {
+func getVideoFileLocation(request GetVideoUploadUrlRequest) (*files.FileLocation, error) {
 	switch request.VideoType {
 	case Feedback:
 		return files.GetFeedbackVideoFileLocation(
@@ -92,7 +92,7 @@ func getFileLocation(request GetVideoUploadUrlRequest) (*files.FileLocation, err
 			request.SubmissionParams.DrillId,
 		), nil
 	case Demo:
-		return files.GetDrillVideoFileLocation(
+		return files.GetDemoVideoFileLocation(
 			request.DemoParams.DrillId,
 			request.DemoParams.Angle,
 		), nil

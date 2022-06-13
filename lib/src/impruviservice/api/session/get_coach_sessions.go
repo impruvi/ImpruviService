@@ -21,15 +21,15 @@ type PlayerSessions struct {
 }
 
 func GetCoachSessions(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
-	var request GetPlayerSessionsRequest
+	var request GetCoachSessionsRequest
 	var err = json.Unmarshal([]byte(apiRequest.Body), &request)
 	if err != nil {
 		return converter.BadRequest("Error unmarshalling request: %v\n", err)
 	}
 
-	playersForCoach, err := players.GetPlayersForCoach(request.PlayerId)
+	playersForCoach, err := players.GetPlayersForCoach(request.CoachId)
 	if err != nil {
-		return converter.InternalServiceError("Error while players for coach: %v. %v\n", request.PlayerId, err)
+		return converter.InternalServiceError("Error while getting players for coach: %v. %v\n", request.CoachId, err)
 	}
 	playerSessions, err := getPlayerSessions(playersForCoach)
 	if err != nil {

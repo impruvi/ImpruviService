@@ -2,7 +2,6 @@ package session
 
 import (
 	"../../dao/drills"
-	"../../dao/session"
 )
 
 type FullSession struct {
@@ -21,21 +20,24 @@ type FullDrill struct {
 	Category    string             `json:"category"` // DRIBBLING/WARMUP/SHOOTING/PASSING
 	Equipment   []drills.Equipment `json:"equipment"`
 
-	Submission               *session.Submission  `json:"submission"`
-	Feedback                 *session.Feedback    `json:"feedback"`
-	Notes                    string               `json:"notes"`
-	EstimatedDurationMinutes int                  `json:"estimatedDurationMinutes"`
-	Prescription             session.Prescription `json:"prescription"`
+	Submission               Media  `json:"submission"`
+	Feedback                 Media  `json:"feedback"`
+	Notes                    string `json:"notes"`
+	EstimatedDurationMinutes int    `json:"estimatedDurationMinutes"`
 
 	Demos Demos `json:"demos"`
 }
 
 type Demos struct {
-	Front Demo `json:"front"`
-	Side  Demo `json:"side"`
-	Close Demo `json:"close"`
+	Front          Media `json:"front"`
+	Side           Media `json:"side"`
+	Close          Media `json:"close"`
+	FrontThumbnail Media `json:"frontThumbnail"`
+	SideThumbnail  Media `json:"sideThumbnail"`
+	CloseThumbnail Media `json:"closeThumbnail"`
 }
 
-type Demo struct {
-	FileLocation string `json:"fileLocation"`
+type Media struct {
+	VideoUploadDateEpochMillis int64  `json:"videoUploadDateEpochMillis"` // only used in submission and feedback videos
+	FileLocation               string `json:"fileLocation"`
 }

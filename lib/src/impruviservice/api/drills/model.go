@@ -18,11 +18,14 @@ type FullDrill struct {
 }
 
 type Demos struct {
-	Front Demo `json:"front"`
-	Side  Demo `json:"side"`
-	Close Demo `json:"close"`
+	Front          Media `json:"front"`
+	Side           Media `json:"side"`
+	Close          Media `json:"close"`
+	FrontThumbnail Media `json:"frontThumbnail"`
+	SideThumbnail  Media `json:"sideThumbnail"`
+	CloseThumbnail Media `json:"closeThumbnail"`
 }
 
-type Demo struct {
+type Media struct {
 	FileLocation string `json:"fileLocation"`
 }

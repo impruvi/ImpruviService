@@ -39,11 +39,20 @@ func GetFeedbackVideoFileLocation(playerId string, sessionNumber int, drillId st
 	}
 }
 
-func GetDrillVideoFileLocation(drillId string, angle Angle) *FileLocation {
+func GetDemoVideoFileLocation(drillId string, angle Angle) *FileLocation {
 	bucketName := bucketnames.DrillsBucket
 	return &FileLocation{
 		BucketName: bucketName,
-		Key:        drillId,
+		Key:        fmt.Sprintf("%s/%s", drillId, angle),
 		URL:        fmt.Sprintf("https://%s.s3.us-west-2.amazonaws.com/%s/%s", bucketName, drillId, angle),
+	}
+}
+
+func GetDemoVideoThumbnailFileLocation(drillId string, angle Angle) *FileLocation {
+	bucketName := bucketnames.DrillsBucket
+	return &FileLocation{
+		BucketName: bucketName,
+		Key:        fmt.Sprintf("%s/%s-thumbnail", drillId, angle),
+		URL:        fmt.Sprintf("https://%s.s3.us-west-2.amazonaws.com/%s/%s-thumbnail", bucketName, drillId, angle),
 	}
 }

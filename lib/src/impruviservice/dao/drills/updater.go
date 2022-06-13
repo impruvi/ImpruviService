@@ -8,10 +8,14 @@ import (
 	"github.com/google/uuid"
 )
 
-func CreateDrill(drill *Drill) error {
+func CreateDrill(drill *Drill) (*Drill, error) {
 	drillId := uuid.New()
 	drill.DrillId = drillId.String()
-	return PutDrill(drill)
+	err := PutDrill(drill)
+	if err != nil {
+		return nil, err
+	}
+	return drill, err
 }
 
 func PutDrill(drill *Drill) error {
@@ -33,7 +37,7 @@ func DeleteDrill(drillId string) error {
 	input := &dynamodb.DeleteItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			drillIdAttr: {
-				N: aws.String(drillId),
+				S: aws.String(drillId),
 			},
 		},
 		TableName: aws.String(tablenames.DrillsTable),

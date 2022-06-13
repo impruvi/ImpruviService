@@ -20,7 +20,7 @@ func UpdateDrill(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayPr
 
 	err = drills.PutDrill(request.Drill)
 	if err != nil {
-		return converter.InternalServiceError("Error while creating drill: %v. %v\n", request.Drill, err)
+		return converter.InternalServiceError("Error while updating drill: %v. %v\n", request.Drill, err)
 	}
 
 	return converter.Success(nil)

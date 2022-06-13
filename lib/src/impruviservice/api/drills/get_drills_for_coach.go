@@ -44,9 +44,12 @@ func getFullDrills(drills []*drillsDao.Drill) []*FullDrill {
 			Category:    drill.Category,
 			Equipment:   drill.Equipment,
 			Demos: Demos{
-				Front: Demo{FileLocation: files.GetDrillVideoFileLocation(drill.DrillId, files.Front).URL},
-				Side:  Demo{FileLocation: files.GetDrillVideoFileLocation(drill.DrillId, files.Side).URL},
-				Close: Demo{FileLocation: files.GetDrillVideoFileLocation(drill.DrillId, files.Close).URL},
+				Front:          Media{FileLocation: files.GetDemoVideoFileLocation(drill.DrillId, files.Front).URL},
+				Side:           Media{FileLocation: files.GetDemoVideoFileLocation(drill.DrillId, files.Side).URL},
+				Close:          Media{FileLocation: files.GetDemoVideoFileLocation(drill.DrillId, files.Close).URL},
+				FrontThumbnail: Media{FileLocation: files.GetDemoVideoThumbnailFileLocation(drill.DrillId, files.Front).URL},
+				SideThumbnail:  Media{FileLocation: files.GetDemoVideoThumbnailFileLocation(drill.DrillId, files.Side).URL},
+				CloseThumbnail: Media{FileLocation: files.GetDemoVideoThumbnailFileLocation(drill.DrillId, files.Close).URL},
 			},
 		})
 	}

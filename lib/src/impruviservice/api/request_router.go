@@ -3,10 +3,10 @@ package api
 import (
 	"./drills"
 	"./feedback"
+	"./invitationcode"
 	"./session"
 	"./submission"
 	"./uploadurl"
-	"./users"
 	"./warmup"
 	"fmt"
 	"github.com/aws/aws-lambda-go/events"
@@ -32,9 +32,9 @@ func RouteRequest(request events.APIGatewayProxyRequest) (events.APIGatewayProxy
 		return *session.GetPlayerSessions(&request), nil
 	} else if request.Resource == "/sessions/coach/get" {
 		return *session.GetCoachSessions(&request), nil
-	} else if request.Resource == "/sessions/create-submission" {
+	} else if request.Resource == "/sessions/submission/create" {
 		return *submission.CreateSubmission(&request), nil
-	} else if request.Resource == "/sessions/create-feedback" {
+	} else if request.Resource == "/sessions/feedback/create" {
 		return *feedback.CreateFeedback(&request), nil
 	} else if request.Resource == "/sessions/create" {
 		return *session.CreateSession(&request), nil
@@ -52,6 +52,8 @@ func RouteRequest(request events.APIGatewayProxyRequest) (events.APIGatewayProxy
 		return *drills.GetDrillsForCoach(&request), nil
 	} else if request.Resource == "/get-video-upload-url" {
 		return *uploadurl.GetVideoUploadUrl(&request), nil
+	} else if request.Resource == "/get-video-thumbnail-upload-url" {
+		return *uploadurl.GetVideoThumbnailUploadUrl(&request), nil
 	}
 
 	return events.APIGatewayProxyResponse{

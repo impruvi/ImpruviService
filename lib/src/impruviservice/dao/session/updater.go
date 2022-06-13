@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"log"
 	"strconv"
 )
 
@@ -62,6 +63,7 @@ func CreateSession(session *Session) error {
 	if err != nil {
 		return err
 	}
+	log.Printf("latestSessionNumber: %v\n", latestSessionNumber)
 	session.SessionNumber = latestSessionNumber + 1
 	return PutSession(session)
 }
@@ -91,7 +93,7 @@ func DeleteSession(sessionNumber int, playerId string) error {
 				N: aws.String(strconv.Itoa(sessionNumber)),
 			},
 		},
-		TableName: aws.String(tablenames.DrillsTable),
+		TableName: aws.String(tablenames.SessionsTable),
 	}
 
 	_, err := dynamo.DeleteItem(input)

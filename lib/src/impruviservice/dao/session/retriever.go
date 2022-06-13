@@ -7,10 +7,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"log"
 	"strconv"
 )
 
 func GetSessions(playerId string) ([]*Session, error) {
+	log.Printf("Getting sessions for player with playerId: %v\n", playerId)
 	result, err := dynamo.Query(&dynamodb.QueryInput{
 		TableName: aws.String(tablenames.SessionsTable),
 		KeyConditions: map[string]*dynamodb.Condition{
@@ -76,9 +78,10 @@ func getLatestSessionNumber(playerId string) (int, error) {
 		return -1, err
 	}
 	if len(result.Items) == 0 {
-		return 1, nil
+		return 0, nil
 	}
 
 	sessions, err := convertItems(result.Items)
+	log.Printf("Sessions for latest session number: %v\n", sessions)
 	return sessions[0].SessionNumber, nil
 }

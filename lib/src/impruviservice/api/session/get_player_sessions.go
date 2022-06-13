@@ -4,6 +4,7 @@ import (
 	"../converter"
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
+	"log"
 )
 
 type GetPlayerSessionsRequest struct {
@@ -21,12 +22,13 @@ func GetPlayerSessions(apiRequest *events.APIGatewayProxyRequest) *events.APIGat
 		return converter.BadRequest("Error unmarshalling request: %v\n", err)
 	}
 
-	sessionsWithDrills, err := getFullSessionsForPlayer(request.PlayerId)
+	fullSessions, err := getFullSessionsForPlayer(request.PlayerId)
 	if err != nil {
 		return converter.InternalServiceError("Error while getting full sessions for player with id: %v, %v\n", request.PlayerId, err)
 	}
+	log.Printf("Full sessions: %v\n", fullSessions)
 
 	return converter.Success(GetPlayerSessionsResponse{
-		Sessions: sessionsWithDrills,
+		Sessions: fullSessions,
 	})
 }

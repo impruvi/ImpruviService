@@ -7,6 +7,7 @@ import (
 	"../converter"
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
+	"log"
 )
 
 type ValidateCodeRequest struct {
@@ -30,12 +31,14 @@ func ValidateCode(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayP
 	if err != nil {
 		return converter.InternalServiceError("Error getting invitation code entry: %v\n", err)
 	}
+	log.Printf("Invitation code entry: %v\n", invitationCodeEntry)
 
 	if invitationCodeEntry.UserType == invitationcodes.Coach {
 		coach, err := coaches.GetCoachById(invitationCodeEntry.UserId)
 		if err != nil {
 			return converter.InternalServiceError("Error getting coach by coachId: %v\n", err)
 		}
+		log.Printf("Coach: %v\n", coach)
 		return converter.Success(ValidateCodeResponse{
 			UserType: invitationCodeEntry.UserType,
 			Coach:    coach,
@@ -45,6 +48,7 @@ func ValidateCode(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayP
 		if err != nil {
 			return converter.InternalServiceError("Error getting player by playerId: %v\n", err)
 		}
+		log.Printf("Player: %v\n", player)
 		return converter.Success(ValidateCodeResponse{
 			UserType: invitationCodeEntry.UserType,
 			Player:   player,
