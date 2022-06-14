@@ -38,6 +38,7 @@ func sendNotifications(playerId string) {
 	player, err := players.GetPlayerById(playerId)
 	if err == nil {
 		notification.Notify(fmt.Sprintf("%v %v submitted a video!", player.FirstName, player.LastName))
+		notification.Publish()
 	} else {
 		// don't fail the request just because we failed to send the notifications
 		log.Printf("Error while getting user by id: %v\n", err)
