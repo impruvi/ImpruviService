@@ -2,6 +2,7 @@ package drills
 
 import (
 	"../../dao/drills"
+	"../../model"
 )
 
 // FullDrill is named as such as this object contains the combination of drill data from the session and drills
@@ -18,14 +19,10 @@ type FullDrill struct {
 }
 
 type Demos struct {
-	Front          Media `json:"front"`
-	Side           Media `json:"side"`
-	Close          Media `json:"close"`
-	FrontThumbnail Media `json:"frontThumbnail"`
-	SideThumbnail  Media `json:"sideThumbnail"`
-	CloseThumbnail Media `json:"closeThumbnail"`
-}
-
-type Media struct {
-	FileLocation string `json:"fileLocation"`
+	Front          model.Media `json:"front"`
+	Side           model.Media `json:"side"`
+	Close          model.Media `json:"close"`
+	FrontThumbnail model.Media `json:"frontThumbnail"`
+	SideThumbnail  model.Media `json:"sideThumbnail"`
+	CloseThumbnail model.Media `json:"closeThumbnail"`
 }

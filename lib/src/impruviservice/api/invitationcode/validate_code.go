@@ -4,6 +4,7 @@ import (
 	"../../dao/coaches"
 	"../../dao/invitationcodes"
 	"../../dao/players"
+	"../../model"
 	"../converter"
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
@@ -15,9 +16,9 @@ type ValidateCodeRequest struct {
 }
 
 type ValidateCodeResponse struct {
-	UserType invitationcodes.UserType `json:"userType"` // PLAYER/COACH
-	Player   *players.Player          `json:"player"`
-	Coach    *coaches.Coach           `json:"coach"`
+	UserType model.UserType  `json:"userType"` // PLAYER/COACH
+	Player   *players.Player `json:"player"`
+	Coach    *coaches.Coach  `json:"coach"`
 }
 
 func ValidateCode(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
@@ -33,7 +34,7 @@ func ValidateCode(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayP
 	}
 	log.Printf("Invitation code entry: %v\n", invitationCodeEntry)
 
-	if invitationCodeEntry.UserType == invitationcodes.Coach {
+	if invitationCodeEntry.UserType == model.Coach {
 		coach, err := coaches.GetCoachById(invitationCodeEntry.UserId)
 		if err != nil {
 			return converter.InternalServiceError("Error getting coach by coachId: %v\n", err)

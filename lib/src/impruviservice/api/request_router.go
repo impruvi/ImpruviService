@@ -1,9 +1,11 @@
 package api
 
 import (
+	"./coach"
 	"./drills"
 	"./feedback"
 	"./invitationcode"
+	"./player"
 	"./session"
 	"./submission"
 	"./uploadurl"
@@ -28,6 +30,12 @@ func RouteRequest(request events.APIGatewayProxyRequest) (events.APIGatewayProxy
 
 	if request.Resource == "/validate-invitation-code" {
 		return *users.ValidateCode(&request), nil
+	} else if request.Resource == "/player/update" {
+		return *player.UpdatePlayer(&request), nil
+	} else if request.Resource == "/coach/update" {
+		return *coach.UpdateCoach(&request), nil
+	} else if request.Resource == "/coach/get" {
+		return *coach.GetCoach(&request), nil
 	} else if request.Resource == "/sessions/player/get" {
 		return *session.GetPlayerSessions(&request), nil
 	} else if request.Resource == "/sessions/coach/get" {
@@ -54,6 +62,8 @@ func RouteRequest(request events.APIGatewayProxyRequest) (events.APIGatewayProxy
 		return *uploadurl.GetVideoUploadUrl(&request), nil
 	} else if request.Resource == "/get-video-thumbnail-upload-url" {
 		return *uploadurl.GetVideoThumbnailUploadUrl(&request), nil
+	} else if request.Resource == "/get-headshot-upload-url" {
+		return *uploadurl.GetHeadshotUploadUrl(&request), nil
 	}
 
 	return events.APIGatewayProxyResponse{

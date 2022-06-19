@@ -2,6 +2,7 @@ package session
 
 import (
 	"../../awsclients/dynamoclient"
+	"../../model"
 )
 
 var dynamo = dynamoclient.GetClient()
@@ -10,9 +11,11 @@ const playerIdAttr = "playerId"
 const sessionNumberAttr = "sessionNumber"
 
 type Session struct {
-	PlayerId      string   `json:"playerId"`
-	SessionNumber int      `json:"sessionNumber"`
-	Drills        []*Drill `json:"drills"`
+	PlayerId      string      `json:"playerId"`
+	SessionNumber int         `json:"sessionNumber"`
+	Name          string      `json:"name"`
+	Drills        []*Drill    `json:"drills"`
+	Date          *model.Date `json:"date"`
 }
 
 type Drill struct {

@@ -56,3 +56,13 @@ func GetDemoVideoThumbnailFileLocation(drillId string, angle Angle) *FileLocatio
 		URL:        fmt.Sprintf("https://%s.s3.us-west-2.amazonaws.com/%s/%s-thumbnail", bucketName, drillId, angle),
 	}
 }
+
+func GetHeadshotFileLocation(userType, userId string) *FileLocation {
+	bucketName := bucketnames.HeadshotsBucket
+	return &FileLocation{
+		BucketName: bucketName,
+		Key:        fmt.Sprintf("%s/%s", userType, userId),
+		URL:        fmt.Sprintf("https://%s.s3.us-west-2.amazonaws.com/%s/%s", bucketName, userType, userId),
+	}
+
+}

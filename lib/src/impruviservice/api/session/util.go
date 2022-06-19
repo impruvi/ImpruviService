@@ -4,6 +4,7 @@ import (
 	"../../dao/drills"
 	"../../dao/session"
 	"../../files"
+	"../../model"
 	"log"
 )
 
@@ -41,18 +42,18 @@ func getFullSession(sess *session.Session) (*FullSession, error) {
 	fullDrills := make([]*FullDrill, 0)
 	for _, sessionDrill := range sess.Drills {
 		drill := drillDetails[sessionDrill.DrillId]
-		var feedback Media
+		var feedback model.Media
 		if sessionDrill.Feedback != nil && sessionDrill.Feedback.VideoUploadDateEpochMillis > 0 {
-			feedback = Media{
-				VideoUploadDateEpochMillis: sessionDrill.Feedback.VideoUploadDateEpochMillis,
-				FileLocation:               files.GetFeedbackVideoFileLocation(sess.PlayerId, sess.SessionNumber, drill.DrillId).URL,
+			feedback = model.Media{
+				UploadDateEpochMillis: sessionDrill.Feedback.VideoUploadDateEpochMillis,
+				FileLocation:          files.GetFeedbackVideoFileLocation(sess.PlayerId, sess.SessionNumber, drill.DrillId).URL,
 			}
 		}
-		var submission Media
+		var submission model.Media
 		if sessionDrill.Submission != nil && sessionDrill.Submission.VideoUploadDateEpochMillis > 0 {
-			submission = Media{
-				VideoUploadDateEpochMillis: sessionDrill.Submission.VideoUploadDateEpochMillis,
-				FileLocation:               files.GetSubmissionVideoFileLocation(sess.PlayerId, sess.SessionNumber, drill.DrillId).URL,
+			submission = model.Media{
+				UploadDateEpochMillis: sessionDrill.Submission.VideoUploadDateEpochMillis,
+				FileLocation:          files.GetSubmissionVideoFileLocation(sess.PlayerId, sess.SessionNumber, drill.DrillId).URL,
 			}
 		}
 		fullDrills = append(fullDrills, &FullDrill{
@@ -67,18 +68,20 @@ func getFullSession(sess *session.Session) (*FullSession, error) {
 			Notes:                    sessionDrill.Notes,
 			EstimatedDurationMinutes: sessionDrill.EstimatedDurationMinutes,
 			Demos: Demos{
-				Front:          Media{FileLocation: files.GetDemoVideoFileLocation(drill.DrillId, files.Front).URL},
-				Side:           Media{FileLocation: files.GetDemoVideoFileLocation(drill.DrillId, files.Side).URL},
-				Close:          Media{FileLocation: files.GetDemoVideoFileLocation(drill.DrillId, files.Close).URL},
-				FrontThumbnail: Media{FileLocation: files.GetDemoVideoThumbnailFileLocation(drill.DrillId, files.Front).URL},
-				SideThumbnail:  Media{FileLocation: files.GetDemoVideoThumbnailFileLocation(drill.DrillId, files.Side).URL},
-				CloseThumbnail: Media{FileLocation: files.GetDemoVideoThumbnailFileLocation(drill.DrillId, files.Close).URL},
+				Front:          model.Media{FileLocation: files.GetDemoVideoFileLocation(drill.DrillId, files.Front).URL},
+				Side:           model.Media{FileLocation: files.GetDemoVideoFileLocation(drill.DrillId, files.Side).URL},
+				Close:          model.Media{FileLocation: files.GetDemoVideoFileLocation(drill.DrillId, files.Close).URL},
+				FrontThumbnail: model.Media{FileLocation: files.GetDemoVideoThumbnailFileLocation(drill.DrillId, files.Front).URL},
+				SideThumbnail:  model.Media{FileLocation: files.GetDemoVideoThumbnailFileLocation(drill.DrillId, files.Side).URL},
+				CloseThumbnail: model.Media{FileLocation: files.GetDemoVideoThumbnailFileLocation(drill.DrillId, files.Close).URL},
 			},
 		})
 	}
 
 	return &FullSession{
 		PlayerId:      sess.PlayerId,
+		Name:          sess.Name,
+		Date:          sess.Date,
 		SessionNumber: sess.SessionNumber,
 		Drills:        fullDrills,
 	}, nil

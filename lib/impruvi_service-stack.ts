@@ -26,9 +26,9 @@ export class ImpruviServiceStack extends cdk.Stack {
     this.createDynamoTables();
     this.createApiResources(iamRole);
     this.createS3Bucket('impruvi-drills');
-    this.createS3Bucket('impruvi-drill-diagrams');
     this.createS3Bucket('impruvi-submissions');
     this.createS3Bucket('impruvi-feedback');
+    this.createS3Bucket('impruvi-headshots');
   }
 
   createIAMRole = (domain: string) => {
@@ -175,6 +175,9 @@ export class ImpruviServiceStack extends cdk.Stack {
       },
       resources: new Map<string, HttpMethod[]>([
         ['/validate-invitation-code', [HttpMethod.POST]],
+        ['/player/update', [HttpMethod.POST]],
+        ['/coach/update', [HttpMethod.POST]],
+        ['/coach/get', [HttpMethod.POST]],
         ['/sessions/player/get', [HttpMethod.POST]],
         ['/sessions/coach/get', [HttpMethod.POST]],
         ['/sessions/delete', [HttpMethod.POST]],
@@ -190,6 +193,7 @@ export class ImpruviServiceStack extends cdk.Stack {
 
         ['/get-video-upload-url', [HttpMethod.POST]],
         ['/get-video-thumbnail-upload-url', [HttpMethod.POST]],
+        ['/get-headshot-upload-url', [HttpMethod.POST]],
       ])
     });
   };

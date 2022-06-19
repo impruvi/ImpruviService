@@ -2,10 +2,13 @@ package session
 
 import (
 	"../../dao/drills"
+	"../../model"
 )
 
 type FullSession struct {
 	PlayerId      string       `json:"playerId"`
+	Name          string       `json:"name"`
+	Date          *model.Date  `json:"date"`
 	SessionNumber int          `json:"sessionNumber"`
 	Drills        []*FullDrill `json:"drills"`
 }
@@ -20,24 +23,19 @@ type FullDrill struct {
 	Category    string             `json:"category"` // DRIBBLING/WARMUP/SHOOTING/PASSING
 	Equipment   []drills.Equipment `json:"equipment"`
 
-	Submission               Media  `json:"submission"`
-	Feedback                 Media  `json:"feedback"`
-	Notes                    string `json:"notes"`
-	EstimatedDurationMinutes int    `json:"estimatedDurationMinutes"`
+	Submission               model.Media `json:"submission"`
+	Feedback                 model.Media `json:"feedback"`
+	Notes                    string      `json:"notes"`
+	EstimatedDurationMinutes int         `json:"estimatedDurationMinutes"`
 
 	Demos Demos `json:"demos"`
 }
 
 type Demos struct {
-	Front          Media `json:"front"`
-	Side           Media `json:"side"`
-	Close          Media `json:"close"`
-	FrontThumbnail Media `json:"frontThumbnail"`
-	SideThumbnail  Media `json:"sideThumbnail"`
-	CloseThumbnail Media `json:"closeThumbnail"`
-}
-
-type Media struct {
-	VideoUploadDateEpochMillis int64  `json:"videoUploadDateEpochMillis"` // only used in submission and feedback videos
-	FileLocation               string `json:"fileLocation"`
+	Front          model.Media `json:"front"`
+	Side           model.Media `json:"side"`
+	Close          model.Media `json:"close"`
+	FrontThumbnail model.Media `json:"frontThumbnail"`
+	SideThumbnail  model.Media `json:"sideThumbnail"`
+	CloseThumbnail model.Media `json:"closeThumbnail"`
 }

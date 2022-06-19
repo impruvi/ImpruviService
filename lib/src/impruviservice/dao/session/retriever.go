@@ -60,7 +60,7 @@ func getSession(playerId string, sessionNumber int) (*Session, error) {
 
 func getLatestSessionNumber(playerId string) (int, error) {
 	result, err := dynamo.Query(&dynamodb.QueryInput{
-		TableName: aws.String(tablenames.PlayersTable),
+		TableName: aws.String(tablenames.SessionsTable),
 		KeyConditions: map[string]*dynamodb.Condition{
 			playerIdAttr: {
 				ComparisonOperator: aws.String("EQ"),

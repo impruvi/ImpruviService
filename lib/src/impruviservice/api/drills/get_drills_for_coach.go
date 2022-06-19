@@ -3,6 +3,7 @@ package drills
 import (
 	drillsDao "../../dao/drills"
 	"../../files"
+	"../../model"
 	"../converter"
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
@@ -44,12 +45,12 @@ func getFullDrills(drills []*drillsDao.Drill) []*FullDrill {
 			Category:    drill.Category,
 			Equipment:   drill.Equipment,
 			Demos: Demos{
-				Front:          Media{FileLocation: files.GetDemoVideoFileLocation(drill.DrillId, files.Front).URL},
-				Side:           Media{FileLocation: files.GetDemoVideoFileLocation(drill.DrillId, files.Side).URL},
-				Close:          Media{FileLocation: files.GetDemoVideoFileLocation(drill.DrillId, files.Close).URL},
-				FrontThumbnail: Media{FileLocation: files.GetDemoVideoThumbnailFileLocation(drill.DrillId, files.Front).URL},
-				SideThumbnail:  Media{FileLocation: files.GetDemoVideoThumbnailFileLocation(drill.DrillId, files.Side).URL},
-				CloseThumbnail: Media{FileLocation: files.GetDemoVideoThumbnailFileLocation(drill.DrillId, files.Close).URL},
+				Front:          model.Media{FileLocation: files.GetDemoVideoFileLocation(drill.DrillId, files.Front).URL},
+				Side:           model.Media{FileLocation: files.GetDemoVideoFileLocation(drill.DrillId, files.Side).URL},
+				Close:          model.Media{FileLocation: files.GetDemoVideoFileLocation(drill.DrillId, files.Close).URL},
+				FrontThumbnail: model.Media{FileLocation: files.GetDemoVideoThumbnailFileLocation(drill.DrillId, files.Front).URL},
+				SideThumbnail:  model.Media{FileLocation: files.GetDemoVideoThumbnailFileLocation(drill.DrillId, files.Side).URL},
+				CloseThumbnail: model.Media{FileLocation: files.GetDemoVideoThumbnailFileLocation(drill.DrillId, files.Close).URL},
 			},
 		})
 	}
