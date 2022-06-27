@@ -2,8 +2,7 @@ package coach
 
 import (
 	"../../dao/coaches"
-	"../../files"
-	"../../model"
+	coachFacade "../../facade/coach"
 	"../converter"
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
@@ -24,10 +23,7 @@ func GetCoach(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayProxy
 		converter.BadRequest("Error unmarshalling request: %v\n", err)
 	}
 
-	coach, err := coaches.GetCoachById(request.CoachId)
-	if coach.Headshot.UploadDateEpochMillis > 0 {
-		coach.Headshot.FileLocation = files.GetHeadshotFileLocation(model.Coach, request.CoachId).URL
-	}
+	coach, err := coachFacade.GetCoachById(request.CoachId)
 
 	if err != nil {
 		return converter.InternalServiceError("Error getting invitation code entry: %v\n", err)

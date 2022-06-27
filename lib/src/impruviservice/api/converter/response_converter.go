@@ -37,3 +37,12 @@ func InternalServiceError(format string, v ...any) *events.APIGatewayProxyRespon
 		Body:       "An unexpected error occurred",
 	}
 }
+
+func NotAuthorizedError(format string, v ...any) *events.APIGatewayProxyResponse {
+	msg := fmt.Sprintf(format, v)
+	log.Println(msg)
+	return &events.APIGatewayProxyResponse{
+		StatusCode: http.StatusForbidden,
+		Body:       msg,
+	}
+}

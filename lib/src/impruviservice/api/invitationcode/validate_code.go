@@ -4,11 +4,14 @@ import (
 	"../../dao/coaches"
 	"../../dao/invitationcodes"
 	"../../dao/players"
+	"../../exceptions"
+	coachFacade "../../facade/coach"
 	"../../model"
 	"../converter"
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
 	"log"
+	"strings"
 )
 
 type ValidateCodeRequest struct {
@@ -28,14 +31,22 @@ func ValidateCode(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayP
 		converter.BadRequest("Error unmarshalling request: %v\n", err)
 	}
 
+	request.InvitationCode = strings.TrimSpace(request.InvitationCode)
+
 	invitationCodeEntry, err := invitationcodes.GetInvitationCodeEntry(request.InvitationCode)
+
 	if err != nil {
-		return converter.InternalServiceError("Error getting invitation code entry: %v\n", err)
+		log.Printf("Error: %v\n", err)
+		if _, ok := err.(exceptions.ResourceNotFoundError); ok {
+			return converter.NotAuthorizedError("Invalid invitation code: %v\n", request.InvitationCode)
+		} else {
+			return converter.InternalServiceError("Error getting invitation code entry: %v\n", err)
+		}
 	}
 	log.Printf("Invitation code entry: %v\n", invitationCodeEntry)
 
 	if invitationCodeEntry.UserType == model.Coach {
-		coach, err := coaches.GetCoachById(invitationCodeEntry.UserId)
+		coach, err := coachFacade.GetCoachById(invitationCodeEntry.UserId)
 		if err != nil {
 			return converter.InternalServiceError("Error getting coach by coachId: %v\n", err)
 		}

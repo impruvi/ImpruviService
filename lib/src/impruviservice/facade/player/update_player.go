@@ -31,25 +31,37 @@ func UpdatePlayer(player *players.Player) error {
 			return errors.New("availability cannot be empty")
 		}
 
-		sessions, err := session.GetSessions(player.PlayerId)
-		if err != nil {
-			return err
-		}
-
-		log.Printf("Sessions: %v\n", sessions)
-		sessionsToChange := make([]*session.Session, 0)
-		for _, sess := range sessions {
-			if shouldChangeSessionDate(sess) {
-				log.Printf("Should change session: %v\n", sess)
-				sessionsToChange = append(sessionsToChange, sess)
-			}
-		}
-
-		log.Printf("Sessions to change: %v\n", sessionsToChange)
-		return updateSessionDates(sessionsToChange, hasSessionStartedToday(sessions), player.Availability)
+		return UpdateSessionDatesForPlayer(player)
 	}
 
 	return nil
+}
+
+func UpdateSessionDatesForPlayerByPlayerId(playerId string) error {
+	player, err := players.GetPlayerById(playerId)
+	if err != nil {
+		return err
+	}
+	return UpdateSessionDatesForPlayer(player)
+}
+
+func UpdateSessionDatesForPlayer(player *players.Player) error {
+	sessions, err := session.GetSessions(player.PlayerId)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Sessions: %v\n", sessions)
+	sessionsToChange := make([]*session.Session, 0)
+	for _, sess := range sessions {
+		if shouldChangeSessionDate(sess) {
+			log.Printf("Should change session: %v\n", sess)
+			sessionsToChange = append(sessionsToChange, sess)
+		}
+	}
+
+	log.Printf("Sessions to change: %v\n", sessionsToChange)
+	return updateSessionDates(sessionsToChange, hasSessionStartedToday(sessions), player.Availability)
 }
 
 func updateSessionDates(sessionsToChange []*session.Session, hasStartedSessionToday bool, availability []string) error {
