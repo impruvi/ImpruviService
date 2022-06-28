@@ -1,24 +1,23 @@
-package session
+package coach
 
 import (
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
 	"impruviService/api/converter"
-	"impruviService/dao/session"
 )
 
-type UpdateSessionRequest struct {
-	Session *session.Session `json:"session"`
+type UpdateCoachRequest struct {
+	Coach *coach.Coach `json:"coach"`
 }
 
-func UpdateSession(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
-	var request CreateSessionRequest
+func UpdateCoach(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
+	var request CreateCoachRequest
 	var err = json.Unmarshal([]byte(apiRequest.Body), &request)
 	if err != nil {
 		return converter.BadRequest("Error unmarshalling request: %v\n", err)
 	}
 
-	err = session.PutSession(request.Session)
+	err = coach.PutCoach(request.Coach)
 	if err != nil {
 		return converter.InternalServiceError("Error while creating session: %v. %v\n", request.Session, err)
 	}

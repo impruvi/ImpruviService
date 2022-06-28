@@ -1,13 +1,15 @@
 package submission
 
 import (
-	"../../dao/players"
-	"../../dao/session"
-	"../../notification"
-	"../converter"
 	"encoding/json"
 	"fmt"
 	"github.com/aws/aws-lambda-go/events"
+	"impruviService/api/converter"
+	sessionUtil "impruviService/api/session"
+	"impruviService/dao/coaches"
+	"impruviService/dao/players"
+	"impruviService/dao/session"
+	"impruviService/notification"
 	"log"
 )
 
@@ -28,19 +30,41 @@ func CreateSubmission(apiRequest *events.APIGatewayProxyRequest) *events.APIGate
 	if err != nil {
 		return converter.InternalServiceError("Error while creating submission: %v\n", err)
 	}
-
-	sendNotifications(request.PlayerId)
+	thisSession, err := session.GetSession(request.PlayerId, request.SessionNumber)
+	if err != nil {
+		// don't fail the request just because we failed to send the notifications
+		log.Printf("Error while getting session by id to notify on submission: %v\n", err)
+	} else {
+		if sessionUtil.SessionSubmissionComplete(thisSession) {
+			sendNotifications(request.PlayerId)
+		}
+	}
 
 	return converter.Success(nil)
 }
 
 func sendNotifications(playerId string) {
 	player, err := players.GetPlayerById(playerId)
-	if err == nil {
-		notification.Notify(fmt.Sprintf("%v %v submitted a video!", player.FirstName, player.LastName))
-		notification.Publish()
-	} else {
+	if err != nil {
 		// don't fail the request just because we failed to send the notifications
-		log.Printf("Error while getting user by id: %v\n", err)
+		log.Printf("Error while getting player by id to notify on submission: %v\n", err)
 	}
+	sendCoachTextNotification(player.FirstName)
+	sendCoachPushNotification(player.CoachId, player.FirstName)
+}
+
+func sendCoachTextNotification(firstName string) {
+	notification.Notify(fmt.Sprintf("%v completed a session!", firstName))
+}
+
+func sendCoachPushNotification(coachId string, playerName string) {
+	coach, err := coaches.GetCoachById(coachId)
+	if err != nil {
+		// don't fail the request just because we failed to send the notifications
+		log.Printf("Error while getting coach by id: %v\n", err)
+	}
+	notification.Publish(
+		fmt.Sprintf("%v completed a session!", playerName),
+		fmt.Sprintf("You have 24 hours to submit feedback"),
+		coach.NotificationId)
 }

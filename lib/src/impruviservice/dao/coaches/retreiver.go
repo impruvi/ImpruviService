@@ -1,11 +1,11 @@
 package coaches
 
 import (
-	"../../constants/tablenames"
 	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"impruviService/constants/tablenames"
 )
 
 func GetCoachById(coachId string) (*Coach, error) {

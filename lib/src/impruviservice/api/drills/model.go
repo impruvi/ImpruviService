@@ -1,7 +1,7 @@
 package drills
 
 import (
-	"../../dao/drills"
+	"impruviService/dao/drills"
 )
 
 // FullDrill is named as such as this object contains the combination of drill data from the session and drills

@@ -1,7 +1,7 @@
 package coaches
 
 import (
-	"../../awsclients/dynamoclient"
+	"impruviService/awsclients/dynamoclient"
 )
 
 var dynamo = dynamoclient.GetClient()
@@ -9,7 +9,8 @@ var dynamo = dynamoclient.GetClient()
 const coachIdAttr = "coachId"
 
 type Coach struct {
-	CoachId   string `json:"coachId"`
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
+	CoachId        string `json:"coachId"`
+	FirstName      string `json:"firstName"`
+	LastName       string `json:"lastName"`
+	NotificationId string `json:"notificationId""`
 }

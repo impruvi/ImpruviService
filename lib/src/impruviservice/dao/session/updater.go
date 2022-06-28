@@ -1,19 +1,19 @@
 package session
 
 import (
-	"../../constants/tablenames"
-	"../../util"
 	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"impruviService/constants/tablenames"
+	"impruviService/util"
 	"log"
 	"strconv"
 )
 
 func CreateFeedback(sessionNumber int, playerId, drillId string) error {
-	session, err := getSession(playerId, sessionNumber)
+	session, err := GetSession(playerId, sessionNumber)
 	if err != nil {
 		return err
 	}
@@ -36,7 +36,7 @@ func CreateFeedback(sessionNumber int, playerId, drillId string) error {
 }
 
 func CreateSubmission(sessionNumber int, playerId, drillId string) error {
-	session, err := getSession(playerId, sessionNumber)
+	session, err := GetSession(playerId, sessionNumber)
 	if err != nil {
 		return err
 	}

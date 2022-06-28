@@ -1,14 +1,15 @@
 package feedback
 
 import (
-	"../../dao/coaches"
-	"../../dao/players"
-	"../../dao/session"
-	"../../notification"
-	"../converter"
 	"encoding/json"
 	"fmt"
 	"github.com/aws/aws-lambda-go/events"
+	"impruviService/api/converter"
+	sessionUtil "impruviService/api/session"
+	"impruviService/dao/coaches"
+	"impruviService/dao/players"
+	"impruviService/dao/session"
+	"impruviService/notification"
 	"log"
 )
 
@@ -31,18 +32,42 @@ func CreateFeedback(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewa
 		return converter.InternalServiceError("Error while creating feedback: %v\n", err)
 	}
 
-	sendNotifications(request.CoachId, request.PlayerId)
+	thisSession, err := session.GetSession(request.PlayerId, request.SessionNumber)
+	if err != nil {
+		// don't fail the request just because we failed to send the notifications
+		log.Printf("Error while getting session by id to notify on submission: %v\n", err)
+	} else {
+		if sessionUtil.SessionFeedbackComplete(thisSession) {
+			sendNotifications(request.PlayerId)
+		}
+	}
 
 	return converter.Success(nil)
 }
 
-func sendNotifications(coachId, playerId string) {
-	coach, err := coaches.GetCoachById(coachId)
+func sendNotifications(playerId string) {
 	player, err := players.GetPlayerById(playerId)
-	if err == nil {
-		notification.Notify(fmt.Sprintf("%v %v submitted feedback for %v %v", coach.FirstName, coach.LastName, player.FirstName, player.LastName))
-	} else {
+	if err != nil {
 		// don't fail the request just because we failed to send the notifications
-		log.Printf("Error while sending text notification: %v\n", err)
+		log.Printf("Error while getting player by id to notify on submission: %v\n", err)
 	}
+	coach, err := coaches.GetCoachById(player.CoachId)
+	if err != nil {
+		// don't fail the request just because we failed to send the notifications
+		log.Printf("Error while getting coach by id to notify on submission: %v\n", err)
+	}
+	// Add this if we collect player numbers and they authorize text messages
+	// sendPlayerTextNotification(coach.FirstName)
+	sendPlayerPushNotification(coach.FirstName, player.NotificationId)
+}
+
+func sendPlayerTextNotification(coachName string) {
+	notification.Notify(fmt.Sprintf("Coach %v submitted feedback on your session!", coachName))
+}
+
+func sendPlayerPushNotification(coachName string, notificationId string) {
+	notification.Publish(
+		fmt.Sprintf("Coach %v submitted feedback!", coachName),
+		fmt.Sprintf("Review your feedback before the next session"),
+		notificationId)
 }

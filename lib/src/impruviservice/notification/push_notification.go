@@ -5,9 +5,9 @@ import (
 	expo "github.com/oliveroneill/exponent-server-sdk-golang/sdk"
 )
 
-func Publish() {
-	pushToken, err := expo.NewExponentPushToken("ExponentPushToken[rjcXQ1L4Z31dqlWRPVATsZ]")
-
+func Publish(msgTitle string, msgBody string, expoPushToken string) {
+	// To check the token is valid
+	pushToken, err := expo.NewExponentPushToken(expoPushToken)
 	if err != nil {
 		panic(err)
 	}
@@ -19,10 +19,10 @@ func Publish() {
 	response, err := client.Publish(
 		&expo.PushMessage{
 			To:       []expo.ExponentPushToken{pushToken},
-			Body:     "This is a test notification",
+			Body:     msgBody,
 			Data:     map[string]string{"withSome": "data"},
 			Sound:    "default",
-			Title:    "Notification Title",
+			Title:    msgTitle,
 			Priority: expo.DefaultPriority,
 		},
 	)

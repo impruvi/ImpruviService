@@ -1,24 +1,24 @@
-package session
+package player
 
 import (
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
 	"impruviService/api/converter"
-	"impruviService/dao/session"
+	"impruviService/dao/player"
 )
 
-type UpdateSessionRequest struct {
-	Session *session.Session `json:"session"`
+type UpdatePlayerRequest struct {
+	Player *player.Player `json:"player"`
 }
 
-func UpdateSession(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
-	var request CreateSessionRequest
+func UpdatePlayer(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
+	var request CreatePlayerRequest
 	var err = json.Unmarshal([]byte(apiRequest.Body), &request)
 	if err != nil {
 		return converter.BadRequest("Error unmarshalling request: %v\n", err)
 	}
 
-	err = session.PutSession(request.Session)
+	err = player.PutPlayer(request.Coach)
 	if err != nil {
 		return converter.InternalServiceError("Error while creating session: %v. %v\n", request.Session, err)
 	}

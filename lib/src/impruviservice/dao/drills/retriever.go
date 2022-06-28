@@ -1,10 +1,10 @@
 package drills
 
 import (
-	"../../constants/tablenames"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"impruviService/constants/tablenames"
 )
 
 func GetDrillsForCoach(coachId string) ([]*Drill, error) {

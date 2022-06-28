@@ -1,8 +1,8 @@
 package files
 
 import (
-	"../constants/bucketnames"
 	"fmt"
+	"impruviService/constants/bucketnames"
 )
 
 type FileLocation struct {

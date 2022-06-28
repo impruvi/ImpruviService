@@ -1,11 +1,11 @@
 package invitationcodes
 
 import (
-	"../../constants/tablenames"
 	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"impruviService/constants/tablenames"
 )
 
 func GetInvitationCodeEntry(invitationCode string) (*InvitationCodeEntry, error) {

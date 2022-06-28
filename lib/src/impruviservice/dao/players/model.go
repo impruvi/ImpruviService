@@ -1,7 +1,7 @@
 package players
 
 import (
-	"../../awsclients/dynamoclient"
+	"impruviService/awsclients/dynamoclient"
 )
 
 var dynamo = dynamoclient.GetClient()
@@ -11,8 +11,9 @@ const playerIdAttr = "playerId"
 const coachIdAttr = "coachId"
 
 type Player struct {
-	PlayerId  string `json:"playerId"`
-	CoachId   string `json:"coachId"`
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
+	PlayerId       string `json:"playerId"`
+	CoachId        string `json:"coachId"`
+	FirstName      string `json:"firstName"`
+	LastName       string `json:"lastName"`
+	NotificationId string `json:"notificationId""`
 }

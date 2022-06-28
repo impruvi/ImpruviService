@@ -1,11 +1,11 @@
 package warmup
 
 import (
-	"../../awsclients/dynamoclient"
-	"../../constants/tablenames"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"impruviService/awsclients/dynamoclient"
+	"impruviService/constants/tablenames"
 )
 
 // HandleWarmupEvent primes the DB connections

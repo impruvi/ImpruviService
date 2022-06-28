@@ -1,11 +1,11 @@
 package drills
 
 import (
-	drillsDao "../../dao/drills"
-	"../../files"
-	"../converter"
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
+	"impruviService/api/converter"
+	drillsDao "impruviService/dao/drills"
+	"impruviService/files"
 )
 
 type GetDrillsForCoachRequest struct {

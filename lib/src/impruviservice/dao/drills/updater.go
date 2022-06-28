@@ -1,11 +1,11 @@
 package drills
 
 import (
-	"../../constants/tablenames"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/google/uuid"
+	"impruviService/constants/tablenames"
 )
 
 func CreateDrill(drill *Drill) (*Drill, error) {

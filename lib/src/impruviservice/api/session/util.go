@@ -1,9 +1,9 @@
 package session
 
 import (
-	"../../dao/drills"
-	"../../dao/session"
-	"../../files"
+	"impruviService/dao/drills"
+	"impruviService/dao/session"
+	"impruviService/files"
 	"log"
 )
 
@@ -90,4 +90,44 @@ func getDrillIds(drills []*session.Drill) []string {
 		drillIds = append(drillIds, drill.DrillId)
 	}
 	return drillIds
+}
+
+// check if session drills are completed
+func SessionSubmissionComplete(session *session.Session) bool {
+	for _, drill := range session.Drills {
+		if !drillSubmissionComplete(drill) {
+			return false
+		}
+	}
+	return true
+}
+
+// check if drill is completed
+func drillSubmissionComplete(drill *session.Drill) bool {
+	return submissionComplete(drill.Submission)
+}
+
+// check if drill has uploaded video
+func submissionComplete(submission *session.Submission) bool {
+	return &submission.VideoUploadDateEpochMillis != nil
+}
+
+// check if session feedback is completed for all drills
+func SessionFeedbackComplete(session *session.Session) bool {
+	for _, drill := range session.Drills {
+		if !drillFeedbackComplete(drill) {
+			return false
+		}
+	}
+	return true
+}
+
+// check if feedback is completed for a drill
+func drillFeedbackComplete(drill *session.Drill) bool {
+	return feedbackComplete(drill.Feedback)
+}
+
+// check if feedback has an uploaded video
+func feedbackComplete(feedback *session.Feedback) bool {
+	return &feedback.VideoUploadDateEpochMillis != nil
 }

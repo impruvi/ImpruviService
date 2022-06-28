@@ -1,7 +1,7 @@
 package session
 
 import (
-	"../../dao/drills"
+	"impruviService/dao/drills"
 )
 
 type FullSession struct {
