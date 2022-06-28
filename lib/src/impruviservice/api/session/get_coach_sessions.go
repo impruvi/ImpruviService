@@ -1,10 +1,10 @@
 package session
 
 import (
-	"../../dao/players"
-	"../converter"
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
+	"impruviService/api/converter"
+	"impruviService/dao/players"
 )
 
 type GetCoachSessionsRequest struct {

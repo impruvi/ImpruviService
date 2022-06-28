@@ -1,8 +1,9 @@
 package coach
 
 import (
-	"../../dao/coaches"
-	"../converter"
+<<<<<<< HEAD
+	"impruviService/dao/coaches"
+	"impruviService/api/converter"
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
 )

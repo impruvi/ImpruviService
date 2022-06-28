@@ -1,21 +1,22 @@
 package users
 
 import (
-	"../../dao/coaches"
-	"../../dao/invitationcodes"
-	"../../dao/players"
-	"../../exceptions"
-	coachFacade "../../facade/coach"
-	"../../model"
-	"../converter"
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
+	"impruviService/api/converter"
+	"impruviService/api/model"
+	"impruviService/dao/coaches"
+	"impruviService/dao/invitationcodes"
+	"impruviService/dao/players"
+	"impruviService/exceptions"
+	coachFacade "impruviService/facade/coach"
 	"log"
 	"strings"
 )
 
 type ValidateCodeRequest struct {
 	InvitationCode string `json:"invitationCode"`
+	ExpoPushToken  string `json:"expoPushToken"`
 }
 
 type ValidateCodeResponse struct {
@@ -51,6 +52,9 @@ func ValidateCode(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayP
 			return converter.InternalServiceError("Error getting coach by coachId: %v\n", err)
 		}
 		log.Printf("Coach: %v\n", coach)
+		if coach.NotificationId != request.ExpoPushToken {
+			coach = updateCoachNotificationId(coach, request.ExpoPushToken)
+		}
 		return converter.Success(ValidateCodeResponse{
 			UserType: invitationCodeEntry.UserType,
 			Coach:    coach,
@@ -61,9 +65,38 @@ func ValidateCode(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayP
 			return converter.InternalServiceError("Error getting player by playerId: %v\n", err)
 		}
 		log.Printf("Player: %v\n", player)
+		if player.NotificationId != request.ExpoPushToken {
+			player = updatePlayerNotificationId(player, request.ExpoPushToken)
+		}
 		return converter.Success(ValidateCodeResponse{
 			UserType: invitationCodeEntry.UserType,
 			Player:   player,
 		})
 	}
+}
+
+func updateCoachNotificationId(coach *coaches.Coach, notificationId string) *coaches.Coach {
+	var newCoach = coach
+	newCoach.NotificationId = notificationId
+	err := coaches.PutCoach(newCoach)
+	if err != nil {
+		// don't error if we can't update push notification id
+		log.Printf("Error while updating coach notification id: %v\n", err)
+		return coach
+	}
+	log.Printf("Updated coach id's %v push notification token", coach.CoachId)
+	return newCoach
+}
+
+func updatePlayerNotificationId(player *players.Player, notificationId string) *players.Player {
+	var newPlayer = player
+	newPlayer.NotificationId = notificationId
+	err := players.PutPlayer(player)
+	if err != nil {
+		// don't error if we can't update push notification id
+		log.Printf("Error while updating player notification id: %v\n", err)
+		return player
+	}
+	log.Printf("Updated player id's %v push notification token", player.PlayerId)
+	return newPlayer
 }

@@ -1,12 +1,12 @@
 package session
 
 import (
-	"../../constants/tablenames"
 	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"impruviService/constants/tablenames"
 	"log"
 	"strconv"
 )
@@ -33,7 +33,7 @@ func GetSessions(playerId string) ([]*Session, error) {
 	return convertItems(result.Items)
 }
 
-func getSession(playerId string, sessionNumber int) (*Session, error) {
+func GetSession(playerId string, sessionNumber int) (*Session, error) {
 	result, err := dynamo.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(tablenames.SessionsTable),
 		Key: map[string]*dynamodb.AttributeValue{

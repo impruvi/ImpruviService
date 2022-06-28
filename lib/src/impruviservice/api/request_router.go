@@ -1,17 +1,16 @@
 package api
 
 import (
-	"./coach"
-	"./drills"
-	"./feedback"
-	"./invitationcode"
-	"./player"
-	"./session"
-	"./submission"
-	"./uploadurl"
-	"./warmup"
 	"fmt"
 	"github.com/aws/aws-lambda-go/events"
+	"impruviService/api/coach"
+	"impruviService/api/drills"
+	"impruviService/api/feedback"
+	"impruviService/api/player"
+	"impruviService/api/session"
+	"impruviService/api/submission"
+	"impruviService/api/uploadurl"
+	"impruviService/api/warmup"
 	"log"
 	"net/http"
 )

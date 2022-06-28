@@ -1,10 +1,10 @@
 package drills
 
 import (
-	"../../dao/drills"
-	"../converter"
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
+	"impruviService/api/converter"
+	"impruviService/dao/drills"
 )
 
 type DeleteDrillRequest struct {
