@@ -1,16 +1,10 @@
 package session
 
 import (
-<<<<<<< HEAD
-	"../../dao/drills"
-	"../../dao/session"
-	"../../files"
-	"../../model"
-=======
 	"impruviService/dao/drills"
 	"impruviService/dao/session"
 	"impruviService/files"
->>>>>>> b2c6df1 (push notification changes)
+	"impruviService/model"
 	"log"
 )
 
