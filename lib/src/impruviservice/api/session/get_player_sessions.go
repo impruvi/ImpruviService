@@ -1,9 +1,9 @@
 package session
 
 import (
-	"../converter"
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
+	"impruviService/api/converter"
 	"log"
 )
 

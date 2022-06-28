@@ -1,11 +1,11 @@
 package players
 
 import (
-	"../../constants/tablenames"
 	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"impruviService/constants/tablenames"
 )
 
 func GetPlayerById(playerId string) (*Player, error) {
@@ -48,4 +48,3 @@ func GetPlayersForCoach(coachId string) ([]*Player, error) {
 
 	return convertItems(result.Items)
 }
-

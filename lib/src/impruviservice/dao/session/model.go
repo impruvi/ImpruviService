@@ -1,8 +1,8 @@
 package session
 
 import (
-	"../../awsclients/dynamoclient"
-	"../../model"
+	"impruviService/awsclients/dynamoclient"
+	"impruviService/model"
 )
 
 var dynamo = dynamoclient.GetClient()

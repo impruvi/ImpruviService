@@ -1,7 +1,7 @@
 package util
 
 import (
-	"../model"
+	"impruviService/model"
 	"time"
 )
 

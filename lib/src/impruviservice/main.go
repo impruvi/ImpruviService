@@ -1,13 +1,13 @@
 package main
 
 import (
-	"./api"
 	"context"
 	"errors"
 	"fmt"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
+	"impruviService/api"
 	"log"
 	"strings"
 )

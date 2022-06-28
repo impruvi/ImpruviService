@@ -1,10 +1,10 @@
 package coach
 
 import (
-	"../../dao/coaches"
-	"../converter"
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
+	"impruviService/api/converter"
+	"impruviService/dao/coaches"
 )
 
 type UpdateCoachRequest struct {

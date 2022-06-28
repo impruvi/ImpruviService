@@ -1,11 +1,11 @@
 package player
 
 import (
-	"../../dao/players"
-	playerFacade "../../facade/player"
-	"../converter"
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
+	"impruviService/api/converter"
+	"impruviService/dao/players"
+	playerFacade "impruviService/facade/player"
 )
 
 type UpdatePlayerRequest struct {

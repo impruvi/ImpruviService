@@ -6,7 +6,7 @@
 # exit when any command fails
 set -e
 
-domain='beta'
+domain='john'
 
 # delete build directory if exists
 [ -d "./lib/build/" ] && rm -rf ./lib/build/

@@ -1,11 +1,11 @@
 package session
 
 import (
-	"../../dao/session"
-	playerFacade "../../facade/player"
-	"../converter"
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
+	"impruviService/api/converter"
+	"impruviService/dao/session"
+	playerFacade "impruviService/facade/player"
 	"log"
 )
 

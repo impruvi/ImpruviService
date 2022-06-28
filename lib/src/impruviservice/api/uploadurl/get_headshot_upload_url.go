@@ -1,12 +1,12 @@
 package uploadurl
 
 import (
-	"../../files"
-	"../converter"
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"impruviService/api/converter"
+	"impruviService/files"
 	"time"
 )
 
