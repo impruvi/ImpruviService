@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"impruviService/api/converter"
 	"impruviService/dao/players"
-	playerFacade "impruviService/facade/players
+	playerFacade "impruviService/facade/players"
 )
 
 type UpdatePlayerRequest struct {
@@ -21,11 +21,7 @@ func UpdatePlayer(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayP
 
 	err = player.PutPlayer(request.Coach)
 	if err != nil {
-<<<<<<< HEAD
 		return converter.InternalServiceError("Error while creating session: %v. %v\n", request.Session, err))
-=======
-		return converter.InternalServiceError("Error while creating session: %v. %v\n", request.Session, err)
->>>>>>> b2c6df1 (push notification changes)
 	}
 
 	return converter.Success(nil)

@@ -2,10 +2,7 @@ package coaches
 
 import (
 	"impruviService/awsclients/dynamoclient"
-<<<<<<< HEAD
 	"impruviService/model"
-=======
->>>>>>> b2c6df1 (push notification changes)
 )
 
 var dynamo = dynamoclient.GetClient()
