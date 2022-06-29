@@ -96,7 +96,7 @@ func getDrillIds(drills []*session.Drill) []string {
 }
 
 // check if session drills are completed
-func SessionSubmissionComplete(session *session.Session) bool {
+func IsSessionSubmissionComplete(session *session.Session) bool {
 	for _, drill := range session.Drills {
 		if !drillSubmissionComplete(drill) {
 			return false
@@ -112,11 +112,11 @@ func drillSubmissionComplete(drill *session.Drill) bool {
 
 // check if drill has uploaded video
 func submissionComplete(submission *session.Submission) bool {
-	return &submission.VideoUploadDateEpochMillis != nil
+	return submission != nil && submission.VideoUploadDateEpochMillis > 0
 }
 
 // check if session feedback is completed for all drills
-func SessionFeedbackComplete(session *session.Session) bool {
+func IsSessionFeedbackComplete(session *session.Session) bool {
 	for _, drill := range session.Drills {
 		if !drillFeedbackComplete(drill) {
 			return false
@@ -132,5 +132,5 @@ func drillFeedbackComplete(drill *session.Drill) bool {
 
 // check if feedback has an uploaded video
 func feedbackComplete(feedback *session.Feedback) bool {
-	return &feedback.VideoUploadDateEpochMillis != nil
+	return feedback != nil && feedback.VideoUploadDateEpochMillis > 0
 }

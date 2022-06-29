@@ -35,7 +35,7 @@ func CreateSubmission(apiRequest *events.APIGatewayProxyRequest) *events.APIGate
 		// don't fail the request just because we failed to send the notifications
 		log.Printf("Error while getting session by id to notify on submission: %v\n", err)
 	} else {
-		if sessionUtil.SessionSubmissionComplete(thisSession) {
+		if sessionUtil.IsSessionSubmissionComplete(thisSession) {
 			sendNotifications(request.PlayerId)
 		}
 	}
@@ -63,8 +63,10 @@ func sendCoachPushNotification(coachId string, playerName string) {
 		// don't fail the request just because we failed to send the notifications
 		log.Printf("Error while getting coach by id: %v\n", err)
 	}
-	notification.Publish(
-		fmt.Sprintf("%v completed a session!", playerName),
-		fmt.Sprintf("You have 24 hours to submit feedback"),
-		coach.NotificationId)
+	if coach.NotificationId != "" {
+		notification.Publish(
+			fmt.Sprintf("%v completed a session!", playerName),
+			fmt.Sprintf("You have 24 hours to submit feedback"),
+			coach.NotificationId)
+	}
 }
