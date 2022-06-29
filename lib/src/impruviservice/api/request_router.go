@@ -6,6 +6,7 @@ import (
 	"impruviService/api/coach"
 	"impruviService/api/drills"
 	"impruviService/api/feedback"
+	"impruviService/api/invitationcode"
 	"impruviService/api/player"
 	"impruviService/api/session"
 	"impruviService/api/submission"
@@ -28,7 +29,7 @@ func RouteRequest(request events.APIGatewayProxyRequest) (events.APIGatewayProxy
 	}
 
 	if request.Resource == "/validate-invitation-code" {
-		return *users.ValidateCode(&request), nil
+		return *invitationcode.ValidateCode(&request), nil
 	} else if request.Resource == "/player/update" {
 		return *player.UpdatePlayer(&request), nil
 	} else if request.Resource == "/coach/update" {

@@ -1,11 +1,11 @@
 package profile
 
 import (
-	"../../dao/players"
-	"../../dao/session"
-	"../../model"
-	"../../util"
 	"errors"
+	"impruviService/dao/players"
+	"impruviService/dao/session"
+	"impruviService/model"
+	"impruviService/util"
 	"log"
 	"sort"
 )

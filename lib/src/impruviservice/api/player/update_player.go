@@ -5,23 +5,23 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"impruviService/api/converter"
 	"impruviService/dao/players"
-	playerFacade "impruviService/facade/players"
+	playerFacade "impruviService/facade/player"
 )
 
 type UpdatePlayerRequest struct {
-	Player *player.Player `json:"player"`
+	Player *players.Player `json:"player"`
 }
 
 func UpdatePlayer(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
-	var request CreatePlayerRequest
+	var request UpdatePlayerRequest
 	var err = json.Unmarshal([]byte(apiRequest.Body), &request)
 	if err != nil {
-		return converter.BadRequest("Error unmarshalling request: %v\n", err)
+		converter.BadRequest("Error unmarshalling request: %v\n", err)
 	}
 
-	err = player.PutPlayer(request.Coach)
+	err = playerFacade.UpdatePlayer(request.Player)
 	if err != nil {
-		return converter.InternalServiceError("Error while creating session: %v. %v\n", request.Session, err))
+		return converter.InternalServiceError("Error getting invitation code entry: %v\n", err)
 	}
 
 	return converter.Success(nil)

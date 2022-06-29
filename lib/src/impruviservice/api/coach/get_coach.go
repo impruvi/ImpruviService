@@ -1,11 +1,11 @@
 package coach
 
 import (
-	"../../dao/coaches"
-	coachFacade "../../facade/coach"
-	"../converter"
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
+	"impruviService/api/converter"
+	"impruviService/dao/coaches"
+	coachFacade "impruviService/facade/coach"
 )
 
 type GetCoachRequest struct {

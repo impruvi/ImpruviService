@@ -1,9 +1,9 @@
 package coach
 
 import (
-	"../../dao/coaches"
-	"../../files"
-	"../../model"
+	"impruviService/dao/coaches"
+	"impruviService/files"
+	"impruviService/model"
 )
 
 func GetCoachById(coachId string) (*coaches.Coach, error) {

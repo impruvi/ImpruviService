@@ -1,21 +1,15 @@
-package users
+package invitationcode
 
 import (
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
 	"impruviService/api/converter"
-<<<<<<< HEAD
-	"impruviService/api/model"
 	"impruviService/dao/coaches"
 	"impruviService/dao/invitationcodes"
 	"impruviService/dao/players"
 	"impruviService/exceptions"
 	coachFacade "impruviService/facade/coach"
-=======
-	"impruviService/dao/coaches"
-	"impruviService/dao/invitationcodes"
-	"impruviService/dao/players"
->>>>>>> b2c6df1ca043c348ab7faab66c2a8cad9aaf1762
+	"impruviService/model"
 	"log"
 	"strings"
 )

@@ -2,10 +2,7 @@ package session
 
 import (
 	"impruviService/dao/drills"
-<<<<<<< HEAD
 	"impruviService/model"
-=======
->>>>>>> b2c6df1ca043c348ab7faab66c2a8cad9aaf1762
 )
 
 type FullSession struct {
