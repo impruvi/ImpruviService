@@ -5,8 +5,11 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"impruviService/api/converter"
 	"impruviService/dao/session"
+<<<<<<< HEAD
 	playerFacade "impruviService/facade/player"
 	"log"
+=======
+>>>>>>> b2c6df1ca043c348ab7faab66c2a8cad9aaf1762
 )
 
 type DeleteSessionRequest struct {

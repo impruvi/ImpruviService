@@ -3,10 +3,16 @@ package api
 import (
 	"fmt"
 	"github.com/aws/aws-lambda-go/events"
+<<<<<<< HEAD
 	"impruviService/api/coach"
 	"impruviService/api/drills"
 	"impruviService/api/feedback"
 	"impruviService/api/player"
+=======
+	"impruviService/api/drills"
+	"impruviService/api/feedback"
+	"impruviService/api/invitationcode"
+>>>>>>> b2c6df1ca043c348ab7faab66c2a8cad9aaf1762
 	"impruviService/api/session"
 	"impruviService/api/submission"
 	"impruviService/api/uploadurl"

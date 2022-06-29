@@ -2,6 +2,7 @@ package session
 
 import (
 <<<<<<< HEAD
+<<<<<<< HEAD
 	"../../dao/drills"
 	"../../dao/session"
 	"../../files"
@@ -11,6 +12,11 @@ import (
 	"impruviService/dao/session"
 	"impruviService/files"
 >>>>>>> b2c6df1 (push notification changes)
+=======
+	"impruviService/dao/drills"
+	"impruviService/dao/session"
+	"impruviService/files"
+>>>>>>> b2c6df1ca043c348ab7faab66c2a8cad9aaf1762
 	"log"
 )
 

@@ -2,7 +2,10 @@ package drills
 
 import (
 	"impruviService/dao/drills"
+<<<<<<< HEAD
 	"impruviService/model"
+=======
+>>>>>>> b2c6df1ca043c348ab7faab66c2a8cad9aaf1762
 )
 
 // FullDrill is named as such as this object contains the combination of drill data from the session and drills
