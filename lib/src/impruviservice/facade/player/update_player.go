@@ -15,6 +15,7 @@ func UpdatePlayer(player *players.Player) error {
 	if err != nil {
 		return err
 	}
+	player.NotificationId = currentPlayer.NotificationId
 
 	err = players.PutPlayer(player)
 	if err != nil {
@@ -73,6 +74,9 @@ func updateSessionDates(sessionsToChange []*session.Session, hasStartedSessionTo
 	}
 
 	log.Printf("Availability set: %v\n", availabilitySet)
+	if len(availabilitySet) == 0 {
+		return nil
+	}
 
 	var nextAvailableDate *model.Date
 	if hasStartedSessionToday {

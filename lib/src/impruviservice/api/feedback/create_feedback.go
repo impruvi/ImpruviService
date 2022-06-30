@@ -37,7 +37,7 @@ func CreateFeedback(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewa
 		// don't fail the request just because we failed to send the notifications
 		log.Printf("Error while getting session by id to notify on submission: %v\n", err)
 	} else {
-		if sessionUtil.SessionFeedbackComplete(thisSession) {
+		if sessionUtil.IsSessionFeedbackComplete(thisSession) {
 			sendNotifications(request.PlayerId)
 		}
 	}
@@ -57,7 +57,7 @@ func sendNotifications(playerId string) {
 		log.Printf("Error while getting coach by id to notify on submission: %v\n", err)
 	}
 	// Add this if we collect player numbers and they authorize text messages
-	// sendPlayerTextNotification(coach.FirstName)
+	sendPlayerTextNotification(coach.FirstName)
 	sendPlayerPushNotification(coach.FirstName, player.NotificationId)
 }
 
@@ -66,8 +66,10 @@ func sendPlayerTextNotification(coachName string) {
 }
 
 func sendPlayerPushNotification(coachName string, notificationId string) {
-	notification.Publish(
-		fmt.Sprintf("Coach %v submitted feedback!", coachName),
-		fmt.Sprintf("Review your feedback before the next session"),
-		notificationId)
+	if notificationId != "" {
+		notification.Publish(
+			fmt.Sprintf("Coach %v submitted feedback!", coachName),
+			fmt.Sprintf("Review your feedback before the next session"),
+			notificationId)
+	}
 }

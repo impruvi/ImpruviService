@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"impruviService/api/converter"
 	"impruviService/dao/coaches"
+	coachFacade "impruviService/facade/coach"
 )
 
 type UpdateCoachRequest struct {
@@ -18,7 +19,7 @@ func UpdateCoach(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayPr
 		converter.BadRequest("Error unmarshalling request: %v\n", err)
 	}
 
-	err = coaches.PutCoach(request.Coach)
+	err = coachFacade.UpdateCoach(request.Coach)
 	if err != nil {
 		return converter.InternalServiceError("Error getting invitation code entry: %v\n", err)
 	}
