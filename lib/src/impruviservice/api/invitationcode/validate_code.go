@@ -1,4 +1,4 @@
-package users
+package invitationcode
 
 import (
 	"encoding/json"
@@ -10,7 +10,6 @@ import (
 	"impruviService/exceptions"
 	coachFacade "impruviService/facade/coach"
 	"impruviService/model"
-
 	"log"
 	"strings"
 )
