@@ -52,6 +52,9 @@ func GetInboxForPlayer(apiRequest *events.APIGatewayProxyRequest) *events.APIGat
 	}
 
 	player, err := players.GetPlayerById(request.PlayerId)
+	if err != nil {
+		return converter.InternalServiceError("Error getting player by playerId: %v\n: %v\n", request.PlayerId, err)
+	}
 	coach, err := coachFacade.GetCoachById(player.CoachId)
 	coachActor := &Actor{
 		Name:              fmt.Sprintf(coach.FirstName),
