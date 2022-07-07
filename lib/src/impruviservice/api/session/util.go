@@ -79,11 +79,14 @@ func getFullSession(sess *session.Session) (*FullSession, error) {
 	}
 
 	return &FullSession{
-		PlayerId:      sess.PlayerId,
-		Name:          sess.Name,
-		Date:          sess.Date,
-		SessionNumber: sess.SessionNumber,
-		Drills:        fullDrills,
+		PlayerId:                   sess.PlayerId,
+		Name:                       sess.Name,
+		Date:                       sess.Date,
+		SessionNumber:              sess.SessionNumber,
+		Drills:                     fullDrills,
+		CreationDateEpochMillis:    sess.CreationDateEpochMillis,
+		LastUpdatedDateEpochMillis: sess.LastUpdatedDateEpochMillis,
+		HasViewedFeedback:          sess.HasViewedFeedback,
 	}, nil
 }
 

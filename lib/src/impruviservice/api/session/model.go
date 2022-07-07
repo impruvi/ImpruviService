@@ -6,11 +6,14 @@ import (
 )
 
 type FullSession struct {
-	PlayerId      string       `json:"playerId"`
-	Name          string       `json:"name"`
-	Date          *model.Date  `json:"date"`
-	SessionNumber int          `json:"sessionNumber"`
-	Drills        []*FullDrill `json:"drills"`
+	PlayerId                   string       `json:"playerId"`
+	Name                       string       `json:"name"`
+	Date                       *model.Date  `json:"date"`
+	SessionNumber              int          `json:"sessionNumber"`
+	Drills                     []*FullDrill `json:"drills"`
+	CreationDateEpochMillis    int64        `json:"creationDateEpochMillis"`
+	LastUpdatedDateEpochMillis int64        `json:"lastUpdatedDateEpochMillis"`
+	HasViewedFeedback          bool         `json:"hasViewedFeedback"`
 }
 
 // FullDrill is named as such as this object contains the combination of drill data from the session and drills

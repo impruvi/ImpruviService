@@ -1,14 +1,16 @@
-# Welcome to your CDK TypeScript project!
+# Overview
+This package contains the backend code for both the Impruvi 
+mobile app and the Impruvi website.
 
-This is a blank project for TypeScript development with CDK.
+Service code is written in GoLang.
+Service is deployed to AWS and infrastructure is managed through AWS CDK.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
-## Useful commands
+# Setting up
+- Ensure you have golang installed (I'm running version go1.18.3 darwin/amd64)
+- If you are using intellij, make sure you have Go Modules integration enabled.
+Preferences > Languages & Frameworks > Go > Go Modules
 
- * `npm run build`   compile typescript to js
- * `npm run watch`   watch for changes and compile
- * `npm run test`    perform the jest unit tests
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk synth`       emits the synthesized CloudFormation template
+
+# Deploying
+Run the `deploy.sh` script to deploy any changes. 

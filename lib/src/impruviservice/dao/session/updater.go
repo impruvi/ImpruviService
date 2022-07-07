@@ -12,6 +12,15 @@ import (
 	"strconv"
 )
 
+func ViewFeedback(sessionNumber int, playerId string) error {
+	session, err := GetSession(playerId, sessionNumber)
+	if err != nil {
+		return err
+	}
+	session.HasViewedFeedback = true
+	return PutSession(session)
+}
+
 func CreateFeedback(sessionNumber int, playerId, drillId string) error {
 	session, err := GetSession(playerId, sessionNumber)
 	if err != nil {
@@ -64,11 +73,15 @@ func CreateSession(session *Session) error {
 		return err
 	}
 	log.Printf("latestSessionNumber: %v\n", latestSessionNumber)
+	currentTimeMillis := util.GetCurrentTimeEpochMillis()
 	session.SessionNumber = latestSessionNumber + 1
+	session.CreationDateEpochMillis = currentTimeMillis
+	session.LastUpdatedDateEpochMillis = currentTimeMillis
 	return PutSession(session)
 }
 
 func PutSession(session *Session) error {
+	session.LastUpdatedDateEpochMillis = util.GetCurrentTimeEpochMillis()
 	av, err := dynamodbattribute.MarshalMap(session)
 	if err != nil {
 		return err

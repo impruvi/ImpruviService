@@ -6,6 +6,7 @@ import (
 	"impruviService/api/coach"
 	"impruviService/api/drills"
 	"impruviService/api/feedback"
+	"impruviService/api/inbox"
 	"impruviService/api/invitationcode"
 	"impruviService/api/player"
 	"impruviService/api/session"
@@ -36,6 +37,8 @@ func RouteRequest(request events.APIGatewayProxyRequest) (events.APIGatewayProxy
 		return *coach.UpdateCoach(&request), nil
 	} else if request.Resource == "/coach/get" {
 		return *coach.GetCoach(&request), nil
+	} else if request.Resource == "/sessions/feedback/view" {
+		return *feedback.ViewFeedback(&request), nil
 	} else if request.Resource == "/sessions/player/get" {
 		return *session.GetPlayerSessions(&request), nil
 	} else if request.Resource == "/sessions/coach/get" {
@@ -58,12 +61,16 @@ func RouteRequest(request events.APIGatewayProxyRequest) (events.APIGatewayProxy
 		return *drills.DeleteDrill(&request), nil
 	} else if request.Resource == "/drills/coach/get" {
 		return *drills.GetDrillsForCoach(&request), nil
+	} else if request.Resource == "/drills/player/get" {
+		return *drills.GetDrillsForPlayer(&request), nil
 	} else if request.Resource == "/get-video-upload-url" {
 		return *uploadurl.GetVideoUploadUrl(&request), nil
 	} else if request.Resource == "/get-video-thumbnail-upload-url" {
 		return *uploadurl.GetVideoThumbnailUploadUrl(&request), nil
 	} else if request.Resource == "/get-headshot-upload-url" {
 		return *uploadurl.GetHeadshotUploadUrl(&request), nil
+	} else if request.Resource == "/inbox/player/get" {
+		return *inbox.GetInboxForPlayer(&request), nil
 	}
 
 	return events.APIGatewayProxyResponse{

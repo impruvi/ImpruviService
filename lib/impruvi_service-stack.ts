@@ -178,6 +178,7 @@ export class ImpruviServiceStack extends cdk.Stack {
         ['/player/update', [HttpMethod.POST]],
         ['/coach/update', [HttpMethod.POST]],
         ['/coach/get', [HttpMethod.POST]],
+        ['/sessions/feedback/view', [HttpMethod.POST]],
         ['/sessions/player/get', [HttpMethod.POST]],
         ['/sessions/coach/get', [HttpMethod.POST]],
         ['/sessions/delete', [HttpMethod.POST]],
@@ -190,6 +191,9 @@ export class ImpruviServiceStack extends cdk.Stack {
         ['/drills/update', [HttpMethod.POST]],
         ['/drills/delete', [HttpMethod.POST]],
         ['/drills/coach/get', [HttpMethod.POST]],
+        ['/drills/player/get', [HttpMethod.POST]],
+
+        ['/inbox/player/get', [HttpMethod.POST]],
 
         ['/get-video-upload-url', [HttpMethod.POST]],
         ['/get-video-thumbnail-upload-url', [HttpMethod.POST]],

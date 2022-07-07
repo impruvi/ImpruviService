@@ -10,9 +10,9 @@ import (
 var snsClient = snsclient.GetClient()
 
 var PhoneNumbersToNotify = []string{
-	"+17202331012",
+	//"+17202331012",
 	"+14253277259",
-	"+12067145030",
+	//"+12067145030",
 }
 
 func Notify(message string) {
