@@ -4,5 +4,5 @@ type UserType string
 
 const (
 	Player UserType = "PLAYER"
-	Coach           = "COACH"
+	Coach  UserType = "COACH"
 )

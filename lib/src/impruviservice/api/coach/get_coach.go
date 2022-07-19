@@ -1,10 +1,7 @@
 package coach
 
 import (
-	"encoding/json"
-	"github.com/aws/aws-lambda-go/events"
-	"impruviService/api/converter"
-	"impruviService/dao/coaches"
+	coachDao "impruviService/dao/coach"
 	coachFacade "impruviService/facade/coach"
 )
 
@@ -13,21 +10,15 @@ type GetCoachRequest struct {
 }
 
 type GetCoachResponse struct {
-	Coach *coaches.Coach `json:"coach"`
+	Coach *coachDao.CoachDB `json:"coach"`
 }
 
-func GetCoach(apiRequest *events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
-	var request GetCoachRequest
-	var err = json.Unmarshal([]byte(apiRequest.Body), &request)
-	if err != nil {
-		converter.BadRequest("Error unmarshalling request: %v\n", err)
-	}
-
+func GetCoach(request *GetCoachRequest) (*GetCoachResponse, error) {
 	coach, err := coachFacade.GetCoachById(request.CoachId)
 
 	if err != nil {
-		return converter.InternalServiceError("Error getting invitation code entry: %v\n", err)
+		return nil, err
 	}
 
-	return converter.Success(GetCoachResponse{Coach: coach})
+	return &GetCoachResponse{Coach: coach}, nil
 }

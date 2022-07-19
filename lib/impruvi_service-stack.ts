@@ -25,15 +25,13 @@ export class ImpruviServiceStack extends cdk.Stack {
     const iamRole = this.createIAMRole(this.domain);
     this.createDynamoTables();
     this.createApiResources(iamRole);
-    this.createS3Bucket('impruvi-drills');
-    this.createS3Bucket('impruvi-submissions');
-    this.createS3Bucket('impruvi-feedback');
-    this.createS3Bucket('impruvi-headshots');
+    this.createAsyncLambdaResources(iamRole);
+    this.createS3Bucket('impruvi-media');
   }
 
   createIAMRole = (domain: string) => {
-    return new iam.Role(this, `${domain}-BentoServiceRole`, {
-      roleName: `${domain}-BentoServiceRole`,
+    return new iam.Role(this, `${domain}-ImpruviServiceRole`, {
+      roleName: `${domain}-ImpruviServiceRole`,
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
       managedPolicies: [
         {managedPolicyArn: 'arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess'},
@@ -136,6 +134,36 @@ export class ImpruviServiceStack extends cdk.Stack {
     }));
   };
 
+  createAsyncLambdaResources = (iamRole: any) => {
+    const notificationSender = new lambda.Function(this, `${this.domain}-impruvi-service-notification-sender`, {
+      functionName: `${this.domain}-impruvi-service-notification-sender`,
+      runtime: lambda.Runtime.GO_1_X,
+      handler: 'ImpruviService',
+      role: iamRole,
+      code: lambda.Code.fromAsset(path.join(__dirname, '/build')),
+      memorySize: 2048,
+      timeout:  cdk.Duration.minutes(15),
+      environment: {
+        domain: this.domain
+      },
+      tracing: lambda.Tracing.ACTIVE
+    });
+    new events.Rule(this, `${this.domain}-impruvi-service-notification-sender-rule`, {
+      ruleName: `${this.domain}-impruvi-service-notification-sender-rule`,
+      schedule: events.Schedule.cron({
+        hour: '8',
+        minute: '0',
+      }),
+      targets: [
+        new eventsTargets.LambdaFunction(notificationSender, {
+          event: events.RuleTargetInput.fromObject({
+            body: "SEND_NOTIFICATIONS_EVENT"
+          })
+        })
+      ],
+    });
+  }
+
   createApiResources = (iamRole: any) => {
     const apiHandlerLambda = new lambda.Function(this, `${this.domain}-impruvi-service-api-handler`, {
       functionName: `${this.domain}-impruvi-service-api-handler`,
@@ -144,7 +172,7 @@ export class ImpruviServiceStack extends cdk.Stack {
       role: iamRole,
       code: lambda.Code.fromAsset(path.join(__dirname, '/build')),
       memorySize: 2048,
-      timeout:  cdk.Duration.seconds(8),
+      timeout:  cdk.Duration.seconds(10),
       environment: {
         domain: this.domain
       },
@@ -174,11 +202,15 @@ export class ImpruviServiceStack extends cdk.Stack {
         tracingEnabled: true,
       },
       resources: new Map<string, HttpMethod[]>([
-        ['/validate-invitation-code', [HttpMethod.POST]],
+        ['/invitation-code/validate', [HttpMethod.POST]],
+
         ['/player/update', [HttpMethod.POST]],
+        ['/player/get', [HttpMethod.POST]],
+        ['/player/inbox/get', [HttpMethod.POST]],
+
         ['/coach/update', [HttpMethod.POST]],
         ['/coach/get', [HttpMethod.POST]],
-        ['/sessions/feedback/view', [HttpMethod.POST]],
+
         ['/sessions/player/get', [HttpMethod.POST]],
         ['/sessions/coach/get', [HttpMethod.POST]],
         ['/sessions/delete', [HttpMethod.POST]],
@@ -186,6 +218,7 @@ export class ImpruviServiceStack extends cdk.Stack {
         ['/sessions/update', [HttpMethod.POST]],
         ['/sessions/submission/create', [HttpMethod.POST]],
         ['/sessions/feedback/create', [HttpMethod.POST]],
+        ['/sessions/feedback/view', [HttpMethod.POST]],
 
         ['/drills/create', [HttpMethod.POST]],
         ['/drills/update', [HttpMethod.POST]],
@@ -193,11 +226,7 @@ export class ImpruviServiceStack extends cdk.Stack {
         ['/drills/coach/get', [HttpMethod.POST]],
         ['/drills/player/get', [HttpMethod.POST]],
 
-        ['/inbox/player/get', [HttpMethod.POST]],
-
-        ['/get-video-upload-url', [HttpMethod.POST]],
-        ['/get-video-thumbnail-upload-url', [HttpMethod.POST]],
-        ['/get-headshot-upload-url', [HttpMethod.POST]],
+        ['/media-upload-url/generate', [HttpMethod.POST]],
       ])
     });
   };

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"impruviService/awsclients/dynamoclient"
+	"impruviService/clients/dynamo"
 	"impruviService/constants/tablenames"
 )
 

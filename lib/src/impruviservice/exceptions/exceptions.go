@@ -9,9 +9,17 @@ func (e ResourceNotFoundError) Error() string {
 }
 
 type InvalidRequestError struct {
-	message string
+	Message string
 }
 
-func (e *InvalidRequestError) Error() string {
-	return e.message
+func (e InvalidRequestError) Error() string {
+	return e.Message
+}
+
+type NotAuthorizedError struct {
+	Message string
+}
+
+func (e NotAuthorizedError) Error() string {
+	return e.Message
 }
