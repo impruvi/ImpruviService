@@ -7,19 +7,33 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
+	"github.com/stripe/stripe-go"
 	"impruviService/api/coach"
 	"impruviService/api/drill"
 	"impruviService/api/inbox"
 	"impruviService/api/invitationcode"
 	"impruviService/api/player"
+	playerAuth "impruviService/api/player/auth"
+	playerSubscription "impruviService/api/player/subscription"
 	"impruviService/api/session"
+	"impruviService/api/subscriptionplan"
 	"impruviService/api/uploadurl"
 	"impruviService/api/warmup"
 	"impruviService/handlers/notification"
 	"impruviService/router"
 	"log"
+	"math/rand"
 	"strings"
+	"time"
 )
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+
+	// Set your secret key. Remember to switch to your live secret key in production.
+	// See your keys here: https://dashboard.stripe.com/apikeys
+	stripe.Key = "sk_test_51LIhrlKA3EgJIYsfR79B9PLo9RVRXr66oAL70oOO8XUZARIk2QTCkM3vKXdm7Bp4oo9T8aRrFEj6kvroWsndlM7F00c5h6D8YY"
+}
 
 func main() {
 	lambda.Start(Handler{})
@@ -30,26 +44,40 @@ type Handler struct{}
 var requestRouter = router.RequestRouter{
 	WarmupHandler: warmup.HandleWarmupEvent,
 	Handlers: map[string]interface{}{
-		"/invitation-code/validate":   invitationcode.ValidateCode,
-		"/player/update":              player.UpdatePlayer,
-		"/player/get":                 player.GetPlayer,
-		"/player/inbox/get":           inbox.GetInboxForPlayer,
-		"/coach/update":               coach.UpdateCoach,
-		"/coach/get":                  coach.GetCoach,
-		"/sessions/feedback/view":     session.ViewFeedback,
-		"/sessions/player/get":        session.GetSessionsForPlayer,
-		"/sessions/coach/get":         session.GetSessionForCoach,
-		"/sessions/submission/create": session.CreateSubmission,
-		"/sessions/feedback/create":   session.CreateFeedback,
-		"/sessions/create":            session.CreateSession,
-		"/sessions/update":            session.UpdateSession,
-		"/sessions/delete":            session.DeleteSession,
-		"/drills/create":              drills.CreateDrill,
-		"/drills/update":              drills.UpdateDrill,
-		"/drills/delete":              drills.DeleteDrill,
-		"/drills/coach/get":           drills.GetDrillsForCoach,
-		"/drills/player/get":          drills.GetDrillsForPlayer,
-		"/media-upload-url/generate":  uploadurl.GetMediaUploadUrl,
+		"/invitation-code/validate":            invitationcode.ValidateCode,
+		"/subscription-plan/get":               subscriptionplan.GetSubscriptionPlan,
+		"/player/sign-in":                      playerAuth.SignIn,
+		"/player/sign-up/initiate":             playerAuth.InitiateSignUp,
+		"/player/sign-up/complete":             playerAuth.CompleteSignUp,
+		"/player/password-reset/initiate":      playerAuth.InitiatePasswordReset,
+		"/player/password-reset/validate-code": playerAuth.ValidatePasswordReset,
+		"/player/password-reset/complete":      playerAuth.CompletePasswordReset,
+		"/player/payment-methods/get":          playerSubscription.GetPaymentMethods,
+		"/player/subscription/re-activate":     playerSubscription.ReactivateSubscription,
+		"/player/subscription/create":          playerSubscription.CreateSubscription,
+		"/player/subscription/get":             playerSubscription.GetSubscription,
+		"/player/subscription/cancel":          playerSubscription.CancelSubscription,
+		"/player/update":                       player.UpdatePlayer,
+		"/player/get":                          player.GetPlayer,
+		"/player/inbox/get":                    inbox.GetInboxForPlayer,
+		"/coaches/list":                        coach.ListCoaches,
+		"/coach/update":                        coach.UpdateCoach,
+		"/coach/get":                           coach.GetCoach,
+		"/sessions/feedback/view":              session.ViewFeedback,
+		"/sessions/player/get":                 session.GetSessionsForPlayer,
+		"/sessions/coach/get":                  session.GetSessionForCoach,
+		"/sessions/submission/create":          session.CreateSubmission,
+		"/sessions/feedback/create":            session.CreateFeedback,
+		"/sessions/create":                     session.CreateSession,
+		"/sessions/update":                     session.UpdateSession,
+		"/sessions/delete":                     session.DeleteSession,
+		"/drills/get":                          drills.GetDrill,
+		"/drills/create":                       drills.CreateDrill,
+		"/drills/update":                       drills.UpdateDrill,
+		"/drills/delete":                       drills.DeleteDrill,
+		"/drills/coach/get":                    drills.GetDrillsForCoach,
+		"/drills/player/get":                   drills.GetDrillsForPlayer,
+		"/media-upload-url/generate":           uploadurl.GetMediaUploadUrl,
 	},
 }
 
@@ -69,7 +97,12 @@ func (h Handler) Invoke(ctx context.Context, event []byte) ([]byte, error) {
 func HandleAPIRequest(_ context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	log.Printf("Resource: %s\n", request.Resource)
 
-	return requestRouter.Route(request), nil
+	response := requestRouter.Route(request)
+	response.Headers = map[string]string{
+		"Access-Control-Allow-Origin":      "*",
+		"Access-Control-Allow-Credentials": "true",
+	}
+	return response, nil
 }
 
 func HandleSendNotificationEvent() error {

@@ -1,4 +1,4 @@
-package model
+package inbox
 
 type InboxEntryType string
 

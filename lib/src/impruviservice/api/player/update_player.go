@@ -1,12 +1,11 @@
 package player
 
 import (
-	"impruviService/dao/player"
 	playerFacade "impruviService/facade/player"
 )
 
 type UpdatePlayerRequest struct {
-	Player *players.PlayerDB `json:"player"`
+	Player *playerFacade.Player `json:"player"`
 }
 
 func UpdatePlayer(request *UpdatePlayerRequest) error {

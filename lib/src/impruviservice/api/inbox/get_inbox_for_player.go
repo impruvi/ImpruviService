@@ -2,7 +2,6 @@ package inbox
 
 import (
 	inboxFacade "impruviService/facade/inbox"
-	"impruviService/model"
 )
 
 type GetInboxForPlayerRequest struct {
@@ -10,7 +9,7 @@ type GetInboxForPlayerRequest struct {
 }
 
 type GetInboxForPlayerResponse struct {
-	Entries []*model.InboxEntry `json:"entries"`
+	Entries []*inboxFacade.InboxEntry `json:"entries"`
 }
 
 func GetInboxForPlayer(request *GetInboxForPlayerRequest) (*GetInboxForPlayerResponse, error) {

@@ -49,3 +49,7 @@ func GetDrillsForCoach(coachId string) ([]*drillsDao.DrillDB, error) {
 	}
 	return activeDrills, nil
 }
+
+func GetDrillById(drillId string) (*drillsDao.DrillDB, error) {
+	return drillsDao.GetDrillById(drillId)
+}

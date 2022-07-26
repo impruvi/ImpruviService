@@ -6,7 +6,9 @@ import * as eventsTargets from '@aws-cdk/aws-events-targets';
 import * as lambda from '@aws-cdk/aws-lambda';
 import {HttpMethod, SingleLambdaBackedRestApi} from '@climatehub/cdk-constructs';
 import * as s3 from '@aws-cdk/aws-s3';
-
+import * as cloudfront from '@aws-cdk/aws-cloudfront';
+import * as cloudfrontOrigins from '@aws-cdk/aws-cloudfront-origins';
+import * as certificateManager from '@aws-cdk/aws-certificatemanager';
 
 const path = require('path');
 
@@ -27,6 +29,7 @@ export class ImpruviServiceStack extends cdk.Stack {
     this.createApiResources(iamRole);
     this.createAsyncLambdaResources(iamRole);
     this.createS3Bucket('impruvi-media');
+    this.createCloudfrontDistribution();
   }
 
   createIAMRole = (domain: string) => {
@@ -39,7 +42,8 @@ export class ImpruviServiceStack extends cdk.Stack {
         {managedPolicyArn: 'arn:aws:iam::aws:policy/AmazonSQSFullAccess'},
         {managedPolicyArn: 'arn:aws:iam::aws:policy/AWSLambda_FullAccess'},
         {managedPolicyArn: 'arn:aws:iam::aws:policy/AmazonS3FullAccess'},
-        {managedPolicyArn: 'arn:aws:iam::aws:policy/AmazonSNSFullAccess'}
+        {managedPolicyArn: 'arn:aws:iam::aws:policy/AmazonSNSFullAccess'},
+        {managedPolicyArn: 'arn:aws:iam::aws:policy/AmazonSESFullAccess'}
       ]
     });
   };
@@ -54,6 +58,18 @@ export class ImpruviServiceStack extends cdk.Stack {
     playersTable.addGlobalSecondaryIndex({
       indexName: 'coachId-index',
       partitionKey: {name: 'coachId', type: dynamodb.AttributeType.STRING},
+    });
+    playersTable.addGlobalSecondaryIndex({
+      indexName: 'email-index',
+      partitionKey: {name: 'email', type: dynamodb.AttributeType.STRING},
+    });
+
+    new dynamodb.Table(this, `${this.domain}-password-reset-codes`, {
+      partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING},
+      sortKey: { name: 'creationDateEpochMillis', type: dynamodb.AttributeType.NUMBER},
+      tableName: `${this.domain}-password-reset-codes`,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
     });
 
     new dynamodb.Table(this, `${this.domain}-coaches`, {
@@ -204,10 +220,24 @@ export class ImpruviServiceStack extends cdk.Stack {
       resources: new Map<string, HttpMethod[]>([
         ['/invitation-code/validate', [HttpMethod.POST]],
 
+        ['/subscription-plan/get', [HttpMethod.POST]],
+
+        ['/player/sign-up/initiate', [HttpMethod.POST]],
+        ['/player/sign-up/complete', [HttpMethod.POST]],
+        ['/player/sign-in', [HttpMethod.POST]],
+        ['/player/payment-methods/get', [HttpMethod.POST]],
+        ['/player/subscription/re-activate', [HttpMethod.POST]],
+        ['/player/subscription/get', [HttpMethod.POST]],
+        ['/player/subscription/create', [HttpMethod.POST]],
+        ['/player/subscription/cancel', [HttpMethod.POST]],
+        ['/player/password-reset/initiate', [HttpMethod.POST]],
+        ['/player/password-reset/validate-code', [HttpMethod.POST]],
+        ['/player/password-reset/complete', [HttpMethod.POST]],
         ['/player/update', [HttpMethod.POST]],
         ['/player/get', [HttpMethod.POST]],
         ['/player/inbox/get', [HttpMethod.POST]],
 
+        ['/coaches/list', [HttpMethod.POST]],
         ['/coach/update', [HttpMethod.POST]],
         ['/coach/get', [HttpMethod.POST]],
 
@@ -220,6 +250,7 @@ export class ImpruviServiceStack extends cdk.Stack {
         ['/sessions/feedback/create', [HttpMethod.POST]],
         ['/sessions/feedback/view', [HttpMethod.POST]],
 
+        ['/drills/get', [HttpMethod.POST]],
         ['/drills/create', [HttpMethod.POST]],
         ['/drills/update', [HttpMethod.POST]],
         ['/drills/delete', [HttpMethod.POST]],
@@ -230,4 +261,57 @@ export class ImpruviServiceStack extends cdk.Stack {
       ])
     });
   };
+
+  createCloudfrontDistribution = () => {
+    const bucket = new s3.Bucket(this, `${this.domain}-impruvi-web-static-assets`, {
+      bucketName: `${this.domain}-impruvi-web-static-assets`,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      cors: [
+        {
+          allowedOrigins: ['*'],
+          allowedMethods: [s3.HttpMethods.HEAD, s3.HttpMethods.GET],
+          allowedHeaders: ['*']
+        }
+      ]
+    });
+
+    const originAccessIdentity = new cloudfront.OriginAccessIdentity(this, `${this.domain}-impruvi-web-origin-access-identity`, {});
+    const bucketPolicy = new s3.BucketPolicy(this, `${this.domain}-impruvi-web-assets-policy`, {
+      bucket: bucket
+    });
+
+    bucketPolicy.document.addStatements(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ['s3:GetObject'],
+      principals: [
+        new iam.AnyPrincipal(),
+        new iam.CanonicalUserPrincipal(originAccessIdentity.cloudFrontOriginAccessIdentityS3CanonicalUserId),
+      ],
+      resources: [
+        bucket.bucketArn + '/*'
+      ],
+    }));
+
+    const domainNames = this.domain === 'prod' ? ['impruviapp.com'] : undefined;
+    const certificate = this.domain === 'prod'
+        ? certificateManager.Certificate.fromCertificateArn(this, "sslCertificate", "arn:aws:acm:us-east-1:522042996447:certificate/8e8a4051-4063-4faa-9b47-db7999e9ad35")
+        : undefined;
+    new cloudfront.Distribution(this, `${this.domain}-impruvi-web-distribution`, {
+      defaultBehavior: {
+        origin: new cloudfrontOrigins.S3Origin(bucket, {
+          originAccessIdentity: originAccessIdentity
+        }),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS
+      },
+      defaultRootObject: 'index.html',
+      errorResponses: [
+        {
+          httpStatus: 403,
+          responsePagePath: '/index.html'
+        }
+      ],
+      domainNames: domainNames,
+      certificate: certificate
+    });
+  }
 }

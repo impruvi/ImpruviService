@@ -23,6 +23,25 @@ func GetCoachById(coachId string) (*CoachDB, error) {
 	return item.(*CoachDB), nil
 }
 
+func ListCoaches() ([]*CoachDB, error) {
+	coaches := make([]*CoachDB, 0)
+	done := false
+	itemChan, errorChan, doneChan := mapper.Scan()
+
+	for !done {
+		select {
+		case coach := <-itemChan:
+			coaches = append(coaches, coach.(*CoachDB))
+		case err := <-errorChan:
+			return nil, err
+		case d := <-doneChan:
+			done = d
+		}
+	}
+
+	return coaches, nil
+}
+
 func PutCoach(coach *CoachDB) error {
 	return mapper.Put(coach)
 }

@@ -46,7 +46,7 @@ func GetLatestSessionNumber(playerId string) (int, error) {
 	}
 	sessions := items.([]*SessionDB)
 	if len(sessions) == 0 {
-		return 1, nil
+		return 0, nil
 	}
 	return sessions[0].SessionNumber, nil
 }

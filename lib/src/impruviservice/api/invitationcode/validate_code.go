@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"impruviService/dao/coach"
 	"impruviService/dao/invitationcode"
-	"impruviService/dao/player"
 	"impruviService/exceptions"
 	coachFacade "impruviService/facade/coach"
 	playerFacade "impruviService/facade/player"
@@ -19,9 +18,9 @@ type ValidateCodeRequest struct {
 }
 
 type ValidateCodeResponse struct {
-	UserType model.UserType    `json:"userType"`
-	Player   *players.PlayerDB `json:"player"`
-	Coach    *coaches.CoachDB  `json:"coach"`
+	UserType model.UserType       `json:"userType"`
+	Player   *playerFacade.Player `json:"player"`
+	Coach    *coaches.CoachDB     `json:"coach"`
 }
 
 func ValidateCode(request *ValidateCodeRequest) (*ValidateCodeResponse, error) {
@@ -46,7 +45,10 @@ func ValidateCode(request *ValidateCodeRequest) (*ValidateCodeResponse, error) {
 		}
 		log.Printf("Coach: %v\n", coach)
 		if coach.NotificationId != request.ExpoPushToken {
-			coach = coachFacade.UpdateCoachNotificationId(coach, request.ExpoPushToken)
+			coach, err = coachFacade.UpdateNotificationId(coach, request.ExpoPushToken)
+			if err != nil {
+				return nil, err
+			}
 		}
 		return &ValidateCodeResponse{
 			UserType: invitationCodeEntry.UserType,
@@ -59,7 +61,10 @@ func ValidateCode(request *ValidateCodeRequest) (*ValidateCodeResponse, error) {
 		}
 		log.Printf("Player: %v\n", player)
 		if player.NotificationId != request.ExpoPushToken {
-			player = playerFacade.UpdatePlayerNotificationId(player, request.ExpoPushToken)
+			player, err = playerFacade.UpdateNotificationId(player.PlayerId, request.ExpoPushToken)
+			if err != nil {
+				return nil, err
+			}
 		}
 		return &ValidateCodeResponse{
 			UserType: invitationCodeEntry.UserType,

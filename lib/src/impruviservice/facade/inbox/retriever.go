@@ -5,11 +5,10 @@ import (
 	sessionDao "impruviService/dao/session"
 	coachFacade "impruviService/facade/coach"
 	playerFacade "impruviService/facade/player"
-	"impruviService/model"
 	"sort"
 )
 
-func GetInboxForPlayer(playerId string) ([]*model.InboxEntry, error) {
+func GetInboxForPlayer(playerId string) ([]*InboxEntry, error) {
 	sessions, err := sessionDao.GetSessions(playerId)
 	if err != nil {
 		return nil, err
@@ -20,27 +19,27 @@ func GetInboxForPlayer(playerId string) ([]*model.InboxEntry, error) {
 		return nil, err
 	}
 	coach, err := coachFacade.GetCoachById(player.CoachId)
-	coachActor := &model.InboxEntryActor{
+	coachActor := &InboxEntryActor{
 		FirstName:         fmt.Sprintf(coach.FirstName),
 		LastName:          fmt.Sprintf(coach.LastName),
 		ImageFileLocation: coach.Headshot.FileLocation,
 	}
 
-	entries := make([]*model.InboxEntry, 0)
-	entries = append(entries, &model.InboxEntry{
+	entries := make([]*InboxEntry, 0)
+	entries = append(entries, &InboxEntry{
 		CreationDateEpochMillis: player.CreationDateEpochMillis,
 		Actor:                   coachActor,
-		Type:                    model.Message,
+		Type:                    Message,
 		Metadata: map[string]string{
 			"messageContent": fmt.Sprintf("Hey %v, welcome to Impruvi! I'm excited to get started training.", player.FirstName),
 		},
 	})
 
 	for _, sess := range sessions {
-		entries = append(entries, &model.InboxEntry{
+		entries = append(entries, &InboxEntry{
 			CreationDateEpochMillis: sess.CreationDateEpochMillis,
 			Actor:                   coachActor,
-			Type:                    model.NewSessionAdded,
+			Type:                    NewSessionAdded,
 			Metadata: map[string]string{
 				"sessionNumber": fmt.Sprintf("%v", sess.SessionNumber),
 			},
@@ -52,10 +51,10 @@ func GetInboxForPlayer(playerId string) ([]*model.InboxEntry, error) {
 			}
 		}
 		if feedbackDate > 0 {
-			entries = append(entries, &model.InboxEntry{
+			entries = append(entries, &InboxEntry{
 				CreationDateEpochMillis: feedbackDate,
 				Actor:                   coachActor,
-				Type:                    model.FeedbackProvided,
+				Type:                    FeedbackProvided,
 				Metadata: map[string]string{
 					"sessionNumber": fmt.Sprintf("%v", sess.SessionNumber),
 				},

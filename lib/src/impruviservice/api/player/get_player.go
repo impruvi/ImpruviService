@@ -1,7 +1,6 @@
 package player
 
 import (
-	"impruviService/dao/player"
 	playerFacade "impruviService/facade/player"
 )
 
@@ -10,7 +9,7 @@ type GetPlayerRequest struct {
 }
 
 type GetPlayerResponse struct {
-	Player *players.PlayerDB `json:"player"`
+	Player *playerFacade.Player `json:"player"`
 }
 
 func GetPlayer(request *GetPlayerRequest) (*GetPlayerResponse, error) {

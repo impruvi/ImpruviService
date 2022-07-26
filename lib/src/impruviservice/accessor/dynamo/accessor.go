@@ -159,6 +159,18 @@ func (m *DynamoDBMapper) Put(item interface{}) error {
 		return err
 	}
 
+	log.Printf("Item before: %v\n", av)
+
+	// GSI keys (if present) must contain a value. MarshalMap automatically adds an entry to the map even
+	// for null values which causes put to fail. We need to remove these keys
+	for k, v := range av {
+		if v.NULL != nil && *v.NULL {
+			delete(av, k)
+		}
+	}
+
+	log.Printf("Item: %v\n", av)
+
 	input := &dynamodb.PutItemInput{
 		Item:      av,
 		TableName: aws.String(m.tableName),
