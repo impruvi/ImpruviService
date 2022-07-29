@@ -6,6 +6,7 @@ type Subscription struct {
 	Plan                              *SubscriptionPlan `json:"plan"`
 	CurrentPeriodStartDateEpochMillis int64             `json:"currentPeriodStartDateEpochMillis"`
 	CurrentPeriodEndDateEpochMillis   int64             `json:"currentPeriodEndDateEpochMillis"`
+	PlayerId                          string            `json:"playerId"`
 }
 
 type SubscriptionPlan struct {
@@ -23,4 +24,5 @@ type PaymentMethod struct {
 	Brand           string `json:"brand"`
 	ExpMonth        uint64 `json:"expMonth"`
 	ExpYear         uint64 `json:"expYear"`
+	IsDefault       bool   `json:"isDefault"`
 }

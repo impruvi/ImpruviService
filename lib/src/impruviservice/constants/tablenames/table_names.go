@@ -2,9 +2,9 @@ package tablenames
 
 import "os"
 
-var InvitationCodesTable = os.Getenv("domain") + "-invitation-codes"
-var PasswordResetCodesTable = os.Getenv("domain") + "-password-reset-codes"
-var PlayersTable = os.Getenv("domain") + "-players"
-var CoachesTable = os.Getenv("domain") + "-coaches"
-var DrillsTable = os.Getenv("domain") + "-drills"
-var SessionsTable = os.Getenv("domain") + "-sessions"
+var InvitationCodesTable = os.Getenv("DOMAIN") + "-invitation-codes"
+var PasswordResetCodesTable = os.Getenv("DOMAIN") + "-password-reset-codes"
+var PlayersTable = os.Getenv("DOMAIN") + "-players"
+var CoachesTable = os.Getenv("DOMAIN") + "-coaches"
+var DrillsTable = os.Getenv("DOMAIN") + "-drills"
+var SessionsTable = os.Getenv("DOMAIN") + "-sessions"

@@ -13,24 +13,25 @@ type PlayerSessions struct {
 
 type Session struct {
 	PlayerId                   string          `json:"playerId"`
-	Name                       string          `json:"name"`
 	SessionNumber              int             `json:"sessionNumber"`
 	Drills                     []*SessionDrill `json:"drills"`
 	CreationDateEpochMillis    int64           `json:"creationDateEpochMillis"`
 	LastUpdatedDateEpochMillis int64           `json:"lastUpdatedDateEpochMillis"`
 	HasViewedFeedback          bool            `json:"hasViewedFeedback"`
+	IsIntroSession             bool            `json:"isIntroSession"`
 }
 
 type SessionDrill struct {
-	DrillId     string                 `json:"drillId"`
-	CoachId     string                 `json:"coachId"`
-	Name        string                 `json:"name"`
-	Description string                 `json:"description"`
-	Category    string                 `json:"category"` // DRIBBLING/WARMUP/SHOOTING/PASSING
-	Equipment   []drillDao.EquipmentDB `json:"equipment"`
-	Demos       *drillDao.DemosDB      `json:"demos"`
-
-	Submission *model.Media `json:"submission"`
-	Feedback   *model.Media `json:"feedback"`
-	Notes      string       `json:"notes"`
+	DrillId             string                  `json:"drillId"`
+	CoachId             string                  `json:"coachId"`
+	Name                string                  `json:"name"`
+	Description         string                  `json:"description"`
+	Category            string                  `json:"category"` // DRIBBLING/WARMUP/SHOOTING/PASSING
+	Equipment           []*drillDao.EquipmentDB `json:"equipment"`
+	Demos               *drillDao.DemosDB       `json:"demos"`
+	Submission          *model.Media            `json:"submission"`
+	SubmissionThumbnail *model.Media            `json:"submissionThumbnail"`
+	Feedback            *model.Media            `json:"feedback"`
+	FeedbackThumbnail   *model.Media            `json:"feedbackThumbnail"`
+	Notes               string                  `json:"notes"`
 }

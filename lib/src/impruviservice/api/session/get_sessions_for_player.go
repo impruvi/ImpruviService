@@ -1,24 +1,41 @@
 package session
 
 import (
+	"impruviService/exceptions"
 	sessionFacade "impruviService/facade/session"
+	"log"
 )
 
-type GetPlayerSessionsRequest struct {
+type GetSessionsForPlayerRequest struct {
 	PlayerId string `json:"playerId"`
 }
 
-type GetPlayerSessionsResponse struct {
+type GetSessionsForPlayerResponse struct {
 	Sessions []*sessionFacade.Session `json:"sessions"`
 }
 
-func GetSessionsForPlayer(request *GetPlayerSessionsRequest) (*GetPlayerSessionsResponse, error) {
+func GetSessionsForPlayer(request *GetSessionsForPlayerRequest) (*GetSessionsForPlayerResponse, error) {
+	log.Printf("GetSessionsForPlayerRequest: %+v\n", request)
+	err := validateGetSessionsForPlayerRequest(request)
+	if err != nil {
+		log.Printf("[WARN] invalid GetSessionsForPlayerRequest: %v\n", err)
+		return nil, err
+	}
+
 	sessions, err := sessionFacade.GetSessionsForPlayer(request.PlayerId)
 	if err != nil {
 		return nil, err
 	}
 
-	return &GetPlayerSessionsResponse{
+	return &GetSessionsForPlayerResponse{
 		Sessions: sessions,
 	}, nil
+}
+
+func validateGetSessionsForPlayerRequest(request *GetSessionsForPlayerRequest) error {
+	if request.PlayerId == "" {
+		return exceptions.InvalidRequestError{Message: "PlayerId cannot be null/empty"}
+	}
+
+	return nil
 }

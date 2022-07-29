@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-lambda-go/events"
 	"impruviService/exceptions"
+	"impruviService/handler/stripeevent"
 	"log"
 	"net/http"
 	"reflect"
@@ -25,6 +26,10 @@ func (r *RequestRouter) Route(apiRequest events.APIGatewayProxyRequest) events.A
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusAccepted,
 		}
+	}
+
+	if apiRequest.Resource == "/stripe-event" {
+		return *stripeevent.HandleStripeEvent(&apiRequest)
 	}
 
 	// find the appropriate handler based on the HTTP resource path
@@ -70,7 +75,7 @@ func (r *RequestRouter) Route(apiRequest events.APIGatewayProxyRequest) events.A
 		} else {
 			resBytes, err := json.Marshal(res[0].Interface())
 			if err != nil {
-				log.Printf("Error: %v\n", err)
+				log.Printf("[ERROR] Error: %v\n", err)
 				return events.APIGatewayProxyResponse{
 					StatusCode: http.StatusInternalServerError,
 					Body:       "An unexpected error occurred",
@@ -103,6 +108,7 @@ func convertError(err error) events.APIGatewayProxyResponse {
 			Body:       err.Error(),
 		}
 	} else {
+		log.Printf("[ERROR] Error: %v\n", err)
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusInternalServerError,
 			Body:       "An unexpected error occurred",

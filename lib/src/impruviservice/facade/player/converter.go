@@ -4,7 +4,15 @@ import (
 	playerDao "impruviService/dao/player"
 )
 
-func convert(playerDB *playerDao.PlayerDB) (*Player, error) {
+func convertAll(playerDBs []*playerDao.PlayerDB) []*Player {
+	players := make([]*Player, 0)
+	for _, playerDB := range playerDBs {
+		players = append(players, convert(playerDB))
+	}
+	return players
+}
+
+func convert(playerDB *playerDao.PlayerDB) *Player {
 	return &Player{
 		PlayerId:                   playerDB.PlayerId,
 		CoachId:                    playerDB.CoachId,
@@ -23,7 +31,7 @@ func convert(playerDB *playerDao.PlayerDB) (*Player, error) {
 		LastUpdatedDateEpochMillis: playerDB.LastUpdatedDateEpochMillis,
 		NotificationId:             playerDB.NotificationId,
 		QueuedSubscription:         playerDB.QueuedSubscription,
-	}, nil
+	}
 }
 
 func reverseConvert(player *Player) *playerDao.PlayerDB {

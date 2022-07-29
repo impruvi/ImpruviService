@@ -9,6 +9,12 @@ import * as s3 from '@aws-cdk/aws-s3';
 import * as cloudfront from '@aws-cdk/aws-cloudfront';
 import * as cloudfrontOrigins from '@aws-cdk/aws-cloudfront-origins';
 import * as certificateManager from '@aws-cdk/aws-certificatemanager';
+import * as stepFunction from '@aws-cdk/aws-stepfunctions';
+import * as stepFunctionTasks from '@aws-cdk/aws-stepfunctions-tasks';
+
+
+const STRIPE_SECRET_KEY = 'sk_test_51LIhrlKA3EgJIYsfR79B9PLo9RVRXr66oAL70oOO8XUZARIk2QTCkM3vKXdm7Bp4oo9T8aRrFEj6kvroWsndlM7F00c5h6D8YY';
+const WEB_HOOK_SIGNING_SECRET = 'whsec_1GbPJpu2ibnLMJixHPcBuBSvOWiEO8Qm';
 
 const path = require('path');
 
@@ -30,6 +36,7 @@ export class ImpruviServiceStack extends cdk.Stack {
     this.createAsyncLambdaResources(iamRole);
     this.createS3Bucket('impruvi-media');
     this.createCloudfrontDistribution();
+    this.createReminderStepFunction(iamRole);
   }
 
   createIAMRole = (domain: string) => {
@@ -43,7 +50,8 @@ export class ImpruviServiceStack extends cdk.Stack {
         {managedPolicyArn: 'arn:aws:iam::aws:policy/AWSLambda_FullAccess'},
         {managedPolicyArn: 'arn:aws:iam::aws:policy/AmazonS3FullAccess'},
         {managedPolicyArn: 'arn:aws:iam::aws:policy/AmazonSNSFullAccess'},
-        {managedPolicyArn: 'arn:aws:iam::aws:policy/AmazonSESFullAccess'}
+        {managedPolicyArn: 'arn:aws:iam::aws:policy/AmazonSESFullAccess'},
+        {managedPolicyArn: 'arn:aws:iam::aws:policy/AWSStepFunctionsFullAccess'},
       ]
     });
   };
@@ -150,9 +158,52 @@ export class ImpruviServiceStack extends cdk.Stack {
     }));
   };
 
+  createReminderStepFunction = (iamRole: any) => {
+    const reminderNotificationWait = new stepFunction.Wait(this, `${this.domain}-impruvi-service-dynamic-reminder-notification-wait`, {
+      time: stepFunction.WaitTime.secondsPath('$.waitSeconds'),
+    });
+
+    const notificationSender = new lambda.Function(this, `${this.domain}-impruvi-service-dynamic-reminder-notification-sender`, {
+      functionName: `${this.domain}-impruvi-service-dynamic-reminder-notification-sender`,
+      runtime: lambda.Runtime.GO_1_X,
+      handler: 'ImpruviService',
+      role: iamRole,
+      code: lambda.Code.fromAsset(path.join(__dirname, '/build')),
+      memorySize: 2048,
+      timeout:  cdk.Duration.minutes(5),
+      environment: {
+        DOMAIN: this.domain,
+        STRIPE_SECRET_KEY: STRIPE_SECRET_KEY,
+        WEB_HOOK_SIGNING_SECRET: WEB_HOOK_SIGNING_SECRET
+      },
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    const reminderNotificationSenderTask = new stepFunctionTasks.LambdaInvoke(this, `${this.domain}-impruvi-service-dynamic-reminder-notification-sender-task`, {
+      lambdaFunction: notificationSender,
+      outputPath: '$.Payload',
+    });
+
+    const reminderNotificationPassthrough = new stepFunction.Pass(this, `${this.domain}-impruvi-service-dynamic-reminder-notification-pass`)
+
+    const reminderNotificationChoice = new stepFunction.Choice(this, `${this.domain}-impruvi-service-dynamic-reminder-notification-choice`)
+        .when(stepFunction.Condition.not(stepFunction.Condition.booleanEquals('$.completed', true)), reminderNotificationWait)
+        .otherwise(reminderNotificationPassthrough);
+
+    const definition = reminderNotificationWait
+        .next(reminderNotificationSenderTask)
+        .next(reminderNotificationChoice);
+
+    new stepFunction.StateMachine(this, `${this.domain}-impruvi-service-dynamic-reminder-notification-state-machine`, {
+      definition,
+      stateMachineName: `${this.domain}-impruvi-service-dynamic-reminder-notification-state-machine`,
+      timeout: cdk.Duration.days(1),
+    });
+  }
+
   createAsyncLambdaResources = (iamRole: any) => {
-    const notificationSender = new lambda.Function(this, `${this.domain}-impruvi-service-notification-sender`, {
-      functionName: `${this.domain}-impruvi-service-notification-sender`,
+    const notificationSender = new lambda.Function(this, `${this.domain}-impruvi-service-fixed-reminder-notification-sender`, {
+      functionName: `${this.domain}-impruvi-service-fixed-reminder-notification-sender`,
       runtime: lambda.Runtime.GO_1_X,
       handler: 'ImpruviService',
       role: iamRole,
@@ -160,13 +211,16 @@ export class ImpruviServiceStack extends cdk.Stack {
       memorySize: 2048,
       timeout:  cdk.Duration.minutes(15),
       environment: {
-        domain: this.domain
+        DOMAIN: this.domain,
+        STRIPE_SECRET_KEY: STRIPE_SECRET_KEY,
+        WEB_HOOK_SIGNING_SECRET: WEB_HOOK_SIGNING_SECRET
       },
       tracing: lambda.Tracing.ACTIVE
     });
-    new events.Rule(this, `${this.domain}-impruvi-service-notification-sender-rule`, {
-      ruleName: `${this.domain}-impruvi-service-notification-sender-rule`,
+    new events.Rule(this, `${this.domain}-impruvi-service-fixed-notification-sender-rule`, {
+      ruleName: `${this.domain}-impruvi-service-fixed-notification-sender-rule`,
       schedule: events.Schedule.cron({
+        weekDay: '2,5',
         hour: '8',
         minute: '0',
       }),
@@ -190,7 +244,9 @@ export class ImpruviServiceStack extends cdk.Stack {
       memorySize: 2048,
       timeout:  cdk.Duration.seconds(10),
       environment: {
-        domain: this.domain
+        DOMAIN: this.domain,
+        STRIPE_SECRET_KEY: STRIPE_SECRET_KEY,
+        WEB_HOOK_SIGNING_SECRET: WEB_HOOK_SIGNING_SECRET
       },
       tracing: lambda.Tracing.ACTIVE
     });
@@ -240,9 +296,11 @@ export class ImpruviServiceStack extends cdk.Stack {
         ['/coaches/list', [HttpMethod.POST]],
         ['/coach/update', [HttpMethod.POST]],
         ['/coach/get', [HttpMethod.POST]],
+        ['/coach/players-and-subscriptions/get', [HttpMethod.POST]],
 
         ['/sessions/player/get', [HttpMethod.POST]],
         ['/sessions/coach/get', [HttpMethod.POST]],
+        ['/sessions/get', [HttpMethod.POST]],
         ['/sessions/delete', [HttpMethod.POST]],
         ['/sessions/create', [HttpMethod.POST]],
         ['/sessions/update', [HttpMethod.POST]],
@@ -258,6 +316,10 @@ export class ImpruviServiceStack extends cdk.Stack {
         ['/drills/player/get', [HttpMethod.POST]],
 
         ['/media-upload-url/generate', [HttpMethod.POST]],
+
+        ['/stripe-event', [HttpMethod.POST]],
+
+        ['/app-version/is-compatible', [HttpMethod.POST]],
       ])
     });
   };

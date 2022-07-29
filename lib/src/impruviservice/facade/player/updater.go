@@ -62,7 +62,7 @@ func ActivatePlayer(playerId, code string) (*Player, error) {
 	if err != nil {
 		return nil, err
 	}
-	return convert(playerDB)
+	return convert(playerDB), nil
 }
 
 func UpdatePlayer(player *Player) error {
@@ -96,7 +96,7 @@ func UpdateNotificationId(playerId, notificationId string) (*Player, error) {
 		log.Printf("Error while updating player notification id: %v\n", err)
 		return nil, err
 	}
-	return convert(playerDB)
+	return convert(playerDB), nil
 }
 
 func UpdatePassword(playerId string, password string) (*Player, error) {
@@ -112,7 +112,7 @@ func UpdatePassword(playerId string, password string) (*Player, error) {
 		log.Printf("Error while updating player password: %v\n", err)
 		return nil, err
 	}
-	return convert(playerDB)
+	return convert(playerDB), nil
 }
 
 func doesPlayerWithEmailExist(email string) (bool, bool, error) {

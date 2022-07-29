@@ -6,6 +6,7 @@ import (
 	sessionDao "impruviService/dao/session"
 	"impruviService/exceptions"
 	notificationFacade "impruviService/facade/notification"
+	dynamicReminderFacade "impruviService/facade/reminder/dynamic"
 	"impruviService/model"
 	"impruviService/util"
 	"log"
@@ -31,6 +32,7 @@ func UpdateSession(session *sessionDao.SessionDB) error {
 	}
 
 	session.LastUpdatedDateEpochMillis = util.GetCurrentTimeEpochMillis()
+	session.CreationDateEpochMillis = currentSession.CreationDateEpochMillis
 	session.HasViewedFeedback = currentSession.HasViewedFeedback
 
 	return sessionDao.PutSession(session)
@@ -57,7 +59,7 @@ func ViewFeedback(playerId string, sessionNumber int) error {
 	return sessionDao.PutSession(session)
 }
 
-func CreateFeedback(playerId string, sessionNumber int, drillId string, fileLocation string) error {
+func CreateFeedback(playerId string, sessionNumber int, drillId, fileLocation, thumbnailFileLocation string) error {
 	session, err := sessionDao.GetSession(playerId, sessionNumber)
 	if err != nil {
 		return err
@@ -67,11 +69,15 @@ func CreateFeedback(playerId string, sessionNumber int, drillId string, fileLoca
 	if err != nil {
 		return err
 	}
+	currentTimeEpochMillis := util.GetCurrentTimeEpochMillis()
 	drill.Feedback = &model.Media{
-		UploadDateEpochMillis: util.GetCurrentTimeEpochMillis(),
+		UploadDateEpochMillis: currentTimeEpochMillis,
 		FileLocation:          fileLocation,
 	}
-
+	drill.FeedbackThumbnail = &model.Media{
+		UploadDateEpochMillis: currentTimeEpochMillis,
+		FileLocation:          thumbnailFileLocation,
+	}
 	err = sessionDao.PutSession(session)
 	if err != nil {
 		return err
@@ -80,15 +86,15 @@ func CreateFeedback(playerId string, sessionNumber int, drillId string, fileLoca
 	if session.IsFeedbackComplete() {
 		err = notificationFacade.SendFeedbackNotifications(playerId)
 		if err != nil {
-			// don't fail the request just because we failed to send the notifications
 			log.Printf("Error sending feedback notifications: %v\n", err)
+			return err
 		}
 	}
 
 	return nil
 }
 
-func CreateSubmission(playerId string, sessionNumber int, drillId, fileLocation string) error {
+func CreateSubmission(playerId string, sessionNumber int, drillId, fileLocation, thumbnailFileLocation string) error {
 	session, err := sessionDao.GetSession(playerId, sessionNumber)
 	if err != nil {
 		return err
@@ -98,9 +104,14 @@ func CreateSubmission(playerId string, sessionNumber int, drillId, fileLocation 
 	if err != nil {
 		return err
 	}
+	currentTimeEpochMillis := util.GetCurrentTimeEpochMillis()
 	drill.Submission = &model.Media{
-		UploadDateEpochMillis: util.GetCurrentTimeEpochMillis(),
+		UploadDateEpochMillis: currentTimeEpochMillis,
 		FileLocation:          fileLocation,
+	}
+	drill.SubmissionThumbnail = &model.Media{
+		UploadDateEpochMillis: currentTimeEpochMillis,
+		FileLocation:          thumbnailFileLocation,
 	}
 
 	err = sessionDao.PutSession(session)
@@ -112,8 +123,16 @@ func CreateSubmission(playerId string, sessionNumber int, drillId, fileLocation 
 		log.Printf("Completed session: %v\n", session)
 		err = notificationFacade.SendSubmissionNotifications(playerId)
 		if err != nil {
-			// don't fail the request just because we failed to send the notifications
 			log.Printf("Error while sending notifications on submission: %v\n", err)
+			return err
+		}
+		err = dynamicReminderFacade.StartFeedbackReminderStepFunctionExecution(&dynamicReminderFacade.SendFeedbackReminderEventData{
+			PlayerId:      session.PlayerId,
+			SessionNumber: session.SessionNumber,
+		})
+		if err != nil {
+			log.Printf("Error while starting feedback reminder step function execution: %v\n", err)
+			return err
 		}
 	}
 

@@ -1,21 +1,25 @@
 package expo
 
 import (
+	"errors"
 	"fmt"
 	expo "github.com/oliveroneill/exponent-server-sdk-golang/sdk"
+	expoClient "impruviService/clients/expo"
+	"log"
 )
 
-func SendPushNotification(title string, body string, expoPushToken string) {
+var client = expoClient.NewClient()
+
+func SendPushNotification(title string, body string, expoPushToken string) error {
+	log.Printf("Publishing notification with tite: %v, body: %v. expoPushToken: %v\n", title, body, expoPushToken)
+
 	// To check the token is valid
 	pushToken, err := expo.NewExponentPushToken(expoPushToken)
 	if err != nil {
-		panic(err)
+		log.Printf("Failed to create new exponent push token for: %v. error: %v\n", expoPushToken, err)
+		return err
 	}
 
-	// Create a new Expo SDK client
-	client := expo.NewPushClient(nil)
-
-	// Publish message
 	response, err := client.Publish(
 		&expo.PushMessage{
 			To:       []expo.ExponentPushToken{pushToken},
@@ -27,13 +31,16 @@ func SendPushNotification(title string, body string, expoPushToken string) {
 		},
 	)
 
-	// Check errors
 	if err != nil {
-		panic(err)
+		log.Printf("Failed to publish notification: %v\n", err)
+		return err
 	}
 
 	// Validate responses
 	if response.ValidateResponse() != nil {
-		fmt.Println(response.PushMessage.To, "failed")
+		log.Printf(fmt.Sprintf("%v failed", response.PushMessage.To))
+		return errors.New(fmt.Sprintf("%v failed", response.PushMessage.To))
 	}
+
+	return nil
 }

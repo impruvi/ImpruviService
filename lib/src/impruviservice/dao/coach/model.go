@@ -12,8 +12,11 @@ type CoachDB struct {
 	LastName                   string                       `json:"lastName"`
 	Email                      string                       `json:"email"`
 	Headshot                   *model.Media                 `json:"headshot"`
-	CardImage                  *model.Media                 `json:"cardImage"`
+	CardImagePortrait          *model.Media                 `json:"cardImagePortrait"`
+	CardImageLandscape         *model.Media                 `json:"cardImageLandscape"`
 	BackgroundImage            *model.Media                 `json:"backgroundImage"`
+	HeaderImage                *model.Media                 `json:"headerImage"`
+	FocusAreas                 []string                     `json:"focusAreas"`
 	Location                   string                       `json:"location"`
 	Position                   string                       `json:"position"`
 	School                     string                       `json:"school"`
@@ -24,4 +27,10 @@ type CoachDB struct {
 	LastUpdatedDateEpochMillis int64                        `json:"lastUpdatedDateEpochMillis"`
 	NotificationId             string                       `json:"notificationId"`
 	SubscriptionPlanRefs       []*model.SubscriptionPlanRef `json:"subscriptionPlanRefs"`
+	IntroSessionDrills         []*IntroSessionDrillDB       `json:"introSessionDrills"`
+}
+
+type IntroSessionDrillDB struct {
+	DrillId string `json:"drillId"`
+	Notes   string `json:"notes"`
 }

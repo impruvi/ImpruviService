@@ -12,6 +12,26 @@ import (
 	"log"
 )
 
+func CancelSubscription(stripeCustomerId string) error {
+	if stripeCustomerId == "" {
+		return nil
+	}
+
+	subscription, err := GetSubscription(stripeCustomerId)
+	if err != nil {
+		log.Printf("Error while getting subscription to cancel: %v\n", err)
+		return err
+	}
+
+	updatedSubscription, err := stripeSubscription.Cancel(subscription.StripeSubscriptionId, nil)
+	if err != nil {
+		log.Printf("Error while cancelling subscription: %v\n", err)
+	}
+
+	log.Printf("Updated subscription after cancelling: %+v\n", updatedSubscription)
+	return nil
+}
+
 func UpdateSubscriptionToCancelAtPeriodEnd(stripeCustomerId string) error {
 	if stripeCustomerId == "" {
 		return nil
@@ -65,12 +85,12 @@ func CreateSubscription(player *playerFacade.Player, paymentMethodId string, sub
 	}
 
 	log.Printf("Customer: %+v\n", customer)
-	err = attachPaymentMethodIfNotExists(customer.ID, paymentMethodId)
+	err = AttachPaymentMethodIfNotExists(customer.ID, paymentMethodId)
 	if err != nil {
 		return err
 	}
 
-	return subscribeToPlan(customer.ID, subscriptionPlanRef)
+	return subscribeToPlan(player.PlayerId, customer.ID, subscriptionPlanRef)
 }
 
 func getOrCreateCustomer(player *playerFacade.Player) (*stripe.Customer, error) {
@@ -99,7 +119,7 @@ func getOrCreateCustomer(player *playerFacade.Player) (*stripe.Customer, error) 
 	}
 }
 
-func attachPaymentMethodIfNotExists(stripeCustomerId, paymentMethodId string) error {
+func AttachPaymentMethodIfNotExists(stripeCustomerId, paymentMethodId string) error {
 	// Check if payment method is already attached to customer
 	existingPaymentMethods, err := GetPaymentMethods(stripeCustomerId)
 	if err != nil {
@@ -136,12 +156,12 @@ func attachPaymentMethodIfNotExists(stripeCustomerId, paymentMethodId string) er
 	if err != nil {
 		return err
 	}
-	log.Printf("Updated customer: %v\n", customer)
+	log.Printf("Updated customer: %+v\n", customer)
 
 	return nil
 }
 
-func subscribeToPlan(stripeCustomerId string, subscriptionPlanRef *model.SubscriptionPlanRef) error {
+func subscribeToPlan(playerId, stripeCustomerId string, subscriptionPlanRef *model.SubscriptionPlanRef) error {
 	// TODO: we can probably remove the below
 	product, err := stripeProduct.Get(subscriptionPlanRef.StripeProductId, nil)
 	if err != nil {
@@ -159,6 +179,7 @@ func subscribeToPlan(stripeCustomerId string, subscriptionPlanRef *model.Subscri
 			},
 		},
 	}
+	subscriptionParams.AddMetadata("playerId", playerId)
 	subscriptionParams.AddExpand("latest_invoice.payment_intent")
 	log.Printf("subscriptionParams: %v\n", subscriptionParams)
 	subscription, err := stripeSubscription.New(subscriptionParams)
@@ -166,5 +187,8 @@ func subscribeToPlan(stripeCustomerId string, subscriptionPlanRef *model.Subscri
 		return err
 	}
 	log.Printf("Subscription: %v\n", subscription)
+	if subscription.Status != stripe.SubscriptionStatusActive {
+		log.Printf("Subscription status is not active!") // TODO: notify us of unexpected event
+	}
 	return nil
 }

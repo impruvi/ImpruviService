@@ -20,6 +20,25 @@ var mapper = dynamo.New(
 		emailIndexName:   {PartitionKeyAttributeName: emailAttr},
 	})
 
+func ListPlayers() ([]*PlayerDB, error) {
+	players := make([]*PlayerDB, 0)
+	done := false
+	itemChan, errorChan, doneChan := mapper.Scan()
+
+	for !done {
+		select {
+		case coach := <-itemChan:
+			players = append(players, coach.(*PlayerDB))
+		case err := <-errorChan:
+			return nil, err
+		case d := <-doneChan:
+			done = d
+		}
+	}
+
+	return players, nil
+}
+
 func GetPlayerById(playerId string) (*PlayerDB, error) {
 	item, err := mapper.Get(dynamo.Key{PartitionKey: &dynamodb.AttributeValue{S: aws.String(playerId)}})
 	if err != nil {

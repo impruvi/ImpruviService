@@ -11,18 +11,20 @@ const sessionNumberAttr = "sessionNumber"
 type SessionDB struct {
 	PlayerId                   string            `json:"playerId"`
 	SessionNumber              int               `json:"sessionNumber"`
-	Name                       string            `json:"name"`
 	Drills                     []*SessionDrillDB `json:"drills"`
 	CreationDateEpochMillis    int64             `json:"creationDateEpochMillis"`
 	LastUpdatedDateEpochMillis int64             `json:"lastUpdatedDateEpochMillis"`
 	HasViewedFeedback          bool              `json:"hasViewedFeedback"`
+	IsIntroSession             bool              `json:"isIntroSession"`
 }
 
 type SessionDrillDB struct {
-	DrillId    string       `json:"drillId"`
-	Submission *model.Media `json:"submission"`
-	Feedback   *model.Media `json:"feedback"`
-	Notes      string       `json:"notes"`
+	DrillId             string       `json:"drillId"`
+	Submission          *model.Media `json:"submission"`
+	SubmissionThumbnail *model.Media `json:"submissionThumbnail"`
+	Feedback            *model.Media `json:"feedback"`
+	FeedbackThumbnail   *model.Media `json:"feedbackThumbnail"`
+	Notes               string       `json:"notes"`
 }
 
 func (s *SessionDB) IsSubmissionComplete() bool {

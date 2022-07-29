@@ -11,11 +11,11 @@ const systemPhoneNumber = "+14253277259"
 
 var snsClient = snsclient.GetClient()
 
-func SendTextToSystem(message string) {
-	SendTextMessage(systemPhoneNumber, message)
+func SendTextToSystem(message string) error {
+	return SendTextMessage(systemPhoneNumber, message)
 }
 
-func SendTextMessage(phoneNumber, message string) {
+func SendTextMessage(phoneNumber, message string) error {
 	log.Printf("Notifying: %v\n", phoneNumber)
 	output, err := snsClient.Publish(&sns.PublishInput{
 		Message:     aws.String(message),
@@ -34,7 +34,9 @@ func SendTextMessage(phoneNumber, message string) {
 
 	if err != nil {
 		log.Printf("Error publishing notification: %v", err)
+		return err
 	} else {
 		log.Printf("Publish output: %+v\n", output)
 	}
+	return nil
 }

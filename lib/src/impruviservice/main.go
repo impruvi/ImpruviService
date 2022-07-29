@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/stripe/stripe-go"
 	"impruviService/api/coach"
+	appCompatibility "impruviService/api/compatibility"
 	"impruviService/api/drill"
 	"impruviService/api/inbox"
 	"impruviService/api/invitationcode"
@@ -19,10 +20,12 @@ import (
 	"impruviService/api/subscriptionplan"
 	"impruviService/api/uploadurl"
 	"impruviService/api/warmup"
-	"impruviService/handlers/notification"
+	"impruviService/handler/reminders/dynamic"
+	"impruviService/handler/reminders/fixed"
 	"impruviService/router"
 	"log"
 	"math/rand"
+	"os"
 	"strings"
 	"time"
 )
@@ -32,7 +35,7 @@ func init() {
 
 	// Set your secret key. Remember to switch to your live secret key in production.
 	// See your keys here: https://dashboard.stripe.com/apikeys
-	stripe.Key = "sk_test_51LIhrlKA3EgJIYsfR79B9PLo9RVRXr66oAL70oOO8XUZARIk2QTCkM3vKXdm7Bp4oo9T8aRrFEj6kvroWsndlM7F00c5h6D8YY"
+	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
 }
 
 func main() {
@@ -44,7 +47,7 @@ type Handler struct{}
 var requestRouter = router.RequestRouter{
 	WarmupHandler: warmup.HandleWarmupEvent,
 	Handlers: map[string]interface{}{
-		"/invitation-code/validate":            invitationcode.ValidateCode,
+		"/invitation-code/validate":            invitationcode.ValidateInvitationCode,
 		"/subscription-plan/get":               subscriptionplan.GetSubscriptionPlan,
 		"/player/sign-in":                      playerAuth.SignIn,
 		"/player/sign-up/initiate":             playerAuth.InitiateSignUp,
@@ -63,11 +66,13 @@ var requestRouter = router.RequestRouter{
 		"/coaches/list":                        coach.ListCoaches,
 		"/coach/update":                        coach.UpdateCoach,
 		"/coach/get":                           coach.GetCoach,
+		"/coach/players-and-subscriptions/get": coach.GetPlayersAndSubscriptions,
 		"/sessions/feedback/view":              session.ViewFeedback,
 		"/sessions/player/get":                 session.GetSessionsForPlayer,
-		"/sessions/coach/get":                  session.GetSessionForCoach,
+		"/sessions/coach/get":                  session.GetSessionsForCoach,
 		"/sessions/submission/create":          session.CreateSubmission,
 		"/sessions/feedback/create":            session.CreateFeedback,
+		"/sessions/get":                        session.GetSession,
 		"/sessions/create":                     session.CreateSession,
 		"/sessions/update":                     session.UpdateSession,
 		"/sessions/delete":                     session.DeleteSession,
@@ -78,6 +83,7 @@ var requestRouter = router.RequestRouter{
 		"/drills/coach/get":                    drills.GetDrillsForCoach,
 		"/drills/player/get":                   drills.GetDrillsForPlayer,
 		"/media-upload-url/generate":           uploadurl.GetMediaUploadUrl,
+		"/app-version/is-compatible":           appCompatibility.IsAppVersionCompatible,
 	},
 }
 
@@ -86,8 +92,10 @@ func (h Handler) Invoke(ctx context.Context, event []byte) ([]byte, error) {
 	lc, _ := lambdacontext.FromContext(ctx)
 	if strings.Contains(lc.InvokedFunctionArn, "impruvi-service-api-handler") {
 		return lambda.NewHandler(HandleAPIRequest).Invoke(ctx, event)
-	} else if strings.Contains(lc.InvokedFunctionArn, "impruvi-service-notification-sender") {
-		return lambda.NewHandler(HandleSendNotificationEvent).Invoke(ctx, event)
+	} else if strings.Contains(lc.InvokedFunctionArn, "impruvi-service-fixed-reminder-notification-sender") {
+		return lambda.NewHandler(fixed.HandleSendFixedRemindersEvent).Invoke(ctx, event)
+	} else if strings.Contains(lc.InvokedFunctionArn, "impruvi-service-dynamic-reminder-notification-sender") {
+		return lambda.NewHandler(dynamic.HandleSendDynamicRemindersEvent).Invoke(ctx, event)
 	} else {
 		log.Printf(fmt.Sprintf("Unexpected lambda context: %s", lc.InvokedFunctionArn))
 		return nil, errors.New(fmt.Sprintf("Unexpected lambda context: %s", lc.InvokedFunctionArn))
@@ -103,8 +111,4 @@ func HandleAPIRequest(_ context.Context, request events.APIGatewayProxyRequest) 
 		"Access-Control-Allow-Credentials": "true",
 	}
 	return response, nil
-}
-
-func HandleSendNotificationEvent() error {
-	return notification.SendScheduledNotifications()
 }

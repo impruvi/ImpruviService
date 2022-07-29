@@ -18,11 +18,19 @@ func GetInboxForPlayer(playerId string) ([]*InboxEntry, error) {
 	if err != nil {
 		return nil, err
 	}
+	if player.CoachId == "" {
+		return make([]*InboxEntry, 0), nil
+	}
+
 	coach, err := coachFacade.GetCoachById(player.CoachId)
+	var headshotFileLocation = ""
+	if coach.Headshot != nil {
+		headshotFileLocation = coach.Headshot.FileLocation
+	}
 	coachActor := &InboxEntryActor{
 		FirstName:         fmt.Sprintf(coach.FirstName),
 		LastName:          fmt.Sprintf(coach.LastName),
-		ImageFileLocation: coach.Headshot.FileLocation,
+		ImageFileLocation: headshotFileLocation,
 	}
 
 	entries := make([]*InboxEntry, 0)

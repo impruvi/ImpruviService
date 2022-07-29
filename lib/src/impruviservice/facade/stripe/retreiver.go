@@ -3,6 +3,7 @@ package stripe
 import (
 	"fmt"
 	"github.com/stripe/stripe-go"
+	stripeCustomer "github.com/stripe/stripe-go/customer"
 	stripePaymentMethod "github.com/stripe/stripe-go/paymentmethod"
 	stripePlan "github.com/stripe/stripe-go/plan"
 	stripeSubscription "github.com/stripe/stripe-go/sub"
@@ -36,6 +37,7 @@ func GetSubscription(stripeCustomerId string) (*Subscription, error) {
 		stripePriceId := item.Plan.ID
 		subscriptionPlan, err := GetSubscriptionPlan(stripeProductId, stripePriceId)
 		if err != nil {
+			log.Printf("Failed to get subscription plan: %v\n", err)
 			return nil, err
 		}
 
@@ -45,6 +47,7 @@ func GetSubscription(stripeCustomerId string) (*Subscription, error) {
 			CancelAtEndOfPeriod:               subscription.CancelAtPeriodEnd,
 			CurrentPeriodStartDateEpochMillis: subscription.CurrentPeriodStart * 1000,
 			CurrentPeriodEndDateEpochMillis:   subscription.CurrentPeriodEnd * 1000,
+			PlayerId:                          subscription.Metadata["playerId"],
 		})
 	}
 
@@ -84,6 +87,13 @@ func GetPaymentMethods(stripeCustomerId string) ([]*PaymentMethod, error) {
 	if stripeCustomerId == "" {
 		return make([]*PaymentMethod, 0), nil
 	}
+
+	customer, err := stripeCustomer.Get(stripeCustomerId, nil)
+	if err != nil {
+		log.Printf("Error while getting customer by id: %v. error: %v\n", stripeCustomerId, err)
+		return nil, err
+	}
+	log.Printf("Customer: %+v\n", customer)
 	log.Printf("getting payment methods for customer: %v\n", stripeCustomerId)
 	paymentMethodIds := make([]*PaymentMethod, 0)
 
@@ -105,8 +115,16 @@ func GetPaymentMethods(stripeCustomerId string) ([]*PaymentMethod, error) {
 			Brand:           string(pm.Card.Brand),
 			ExpMonth:        pm.Card.ExpMonth,
 			ExpYear:         pm.Card.ExpYear,
+			IsDefault:       getCustomerDefaultPaymentMethod(customer) == pm.ID,
 		})
 	}
 
 	return paymentMethodIds, nil
+}
+
+func getCustomerDefaultPaymentMethod(customer *stripe.Customer) string {
+	if customer == nil || customer.InvoiceSettings == nil || customer.InvoiceSettings.DefaultPaymentMethod == nil {
+		return ""
+	}
+	return customer.InvoiceSettings.DefaultPaymentMethod.ID
 }

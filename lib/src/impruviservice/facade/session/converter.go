@@ -28,28 +28,29 @@ func convert(sess *sessionDao.SessionDB) (*Session, error) {
 	for _, sessionDrill := range sess.Drills {
 		drill := drillDetails[sessionDrill.DrillId]
 		drills = append(drills, &SessionDrill{
-			DrillId:     drill.DrillId,
-			CoachId:     drill.CoachId,
-			Name:        drill.Name,
-			Description: drill.Description,
-			Category:    drill.Category,
-			Equipment:   drill.Equipment,
-			Demos:       drill.Demos,
-
-			Submission: sessionDrill.Submission,
-			Feedback:   sessionDrill.Feedback,
-			Notes:      sessionDrill.Notes,
+			DrillId:             drill.DrillId,
+			CoachId:             drill.CoachId,
+			Name:                drill.Name,
+			Description:         drill.Description,
+			Category:            drill.Category,
+			Equipment:           drill.Equipment,
+			Demos:               drill.Demos,
+			Submission:          sessionDrill.Submission,
+			SubmissionThumbnail: sessionDrill.SubmissionThumbnail,
+			Feedback:            sessionDrill.Feedback,
+			FeedbackThumbnail:   sessionDrill.FeedbackThumbnail,
+			Notes:               sessionDrill.Notes,
 		})
 	}
 
 	return &Session{
 		PlayerId:                   sess.PlayerId,
-		Name:                       sess.Name,
 		SessionNumber:              sess.SessionNumber,
 		Drills:                     drills,
 		CreationDateEpochMillis:    sess.CreationDateEpochMillis,
 		LastUpdatedDateEpochMillis: sess.LastUpdatedDateEpochMillis,
 		HasViewedFeedback:          sess.HasViewedFeedback,
+		IsIntroSession:             sess.IsIntroSession,
 	}, nil
 }
 

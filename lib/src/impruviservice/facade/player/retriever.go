@@ -30,12 +30,20 @@ func DoesPasswordMatch(email, password string) (bool, error) {
 	return player.Password == password, nil
 }
 
+func GetPlayersForCoach(coachId string) ([]*Player, error) {
+	players, err := playerDao.GetPlayersForCoach(coachId)
+	if err != nil {
+		return nil, err
+	}
+	return convertAll(players), nil
+}
+
 func GetPlayerByEmail(email string) (*Player, error) {
 	player, err := playerDao.GetPlayerByEmail(email)
 	if err != nil {
 		return nil, err
 	}
-	return convert(player)
+	return convert(player), nil
 }
 
 func GetPlayerById(playerId string) (*Player, error) {
@@ -43,7 +51,7 @@ func GetPlayerById(playerId string) (*Player, error) {
 	if err != nil {
 		return nil, err
 	}
-	return convert(player)
+	return convert(player), nil
 }
 
 func GetPlayerFromToken(token string) (*Player, error) {

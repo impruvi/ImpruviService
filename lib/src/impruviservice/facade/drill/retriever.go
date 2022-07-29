@@ -14,7 +14,9 @@ func GetDrillsForPlayer(playerId string) ([]*drillsDao.DrillDB, error) {
 	drillIdsSet := make(map[string]bool, 0)
 	for _, sess := range sessions {
 		for _, drill := range sess.Drills {
-			drillIdsSet[drill.DrillId] = true
+			if sess.IsSubmissionComplete() {
+				drillIdsSet[drill.DrillId] = true
+			}
 		}
 	}
 

@@ -1,7 +1,9 @@
 package player
 
 import (
+	"impruviService/exceptions"
 	playerFacade "impruviService/facade/player"
+	"log"
 )
 
 type GetPlayerRequest struct {
@@ -13,6 +15,13 @@ type GetPlayerResponse struct {
 }
 
 func GetPlayer(request *GetPlayerRequest) (*GetPlayerResponse, error) {
+	log.Printf("GetPlayerRequest: %+v\n", request)
+	err := validateGetPlayerRequest(request)
+	if err != nil {
+		log.Printf("[WARN] invalid GetPlayerRequest: %v\n", err)
+		return nil, err
+	}
+
 	player, err := playerFacade.GetPlayerById(request.PlayerId)
 
 	if err != nil {
@@ -20,4 +29,12 @@ func GetPlayer(request *GetPlayerRequest) (*GetPlayerResponse, error) {
 	}
 
 	return &GetPlayerResponse{Player: player}, nil
+}
+
+func validateGetPlayerRequest(request *GetPlayerRequest) error {
+	if request.PlayerId == "" {
+		return exceptions.InvalidRequestError{Message: "PlayerId cannot be null/empty"}
+	}
+
+	return nil
 }

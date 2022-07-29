@@ -9,25 +9,25 @@ const coachIdAttr = "coachId"
 const drillIdAttr = "drillId"
 
 type DrillDB struct {
-	DrillId     string        `json:"drillId"`
-	CoachId     string        `json:"coachId"`
-	Name        string        `json:"name"`
-	Description string        `json:"description"`
-	Category    string        `json:"category"` // DRIBBLING/WARMUP/SHOOTING/PASSING
-	Equipment   []EquipmentDB `json:"equipment"`
-	Demos       *DemosDB      `json:"demos"`
-	IsDeleted   bool          `json:"isDeleted"`
+	DrillId     string         `json:"drillId"`
+	CoachId     string         `json:"coachId"`
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Category    string         `json:"category"` // DRIBBLING/WARMUP/SHOOTING/PASSING
+	Equipment   []*EquipmentDB `json:"equipment"`
+	Demos       *DemosDB       `json:"demos"`
+	IsDeleted   bool           `json:"isDeleted"`
 }
 
 type EquipmentDB struct {
-	EquipmentType string        `json:"equipmentType"` // BALL/CONE/SPACE/GOAL
-	Requirement   RequirementDB `json:"requirement"`
+	EquipmentType string         `json:"equipmentType"` // BALL/CONE/SPACE/GOAL
+	Requirement   *RequirementDB `json:"requirement"`
 }
 
 type RequirementDB struct {
-	RequirementType string       `json:"requirementType"` // COUNT/DIMENSION
-	Count           int          `json:"count"`
-	Dimensions      DimensionsDB `json:"dimension"`
+	RequirementType string        `json:"requirementType"` // COUNT/DIMENSION
+	Count           int           `json:"count"`
+	Dimensions      *DimensionsDB `json:"dimension"`
 }
 
 // DimensionsDB in yards
@@ -37,10 +37,10 @@ type DimensionsDB struct {
 }
 
 type DemosDB struct {
-	Front          model.Media `json:"front"`
-	Side           model.Media `json:"side"`
-	Close          model.Media `json:"close"`
-	FrontThumbnail model.Media `json:"frontThumbnail"`
-	SideThumbnail  model.Media `json:"sideThumbnail"`
-	CloseThumbnail model.Media `json:"closeThumbnail"`
+	Front          *model.Media `json:"front"`
+	Side           *model.Media `json:"side"`
+	Close          *model.Media `json:"close"`
+	FrontThumbnail *model.Media `json:"frontThumbnail"`
+	SideThumbnail  *model.Media `json:"sideThumbnail"`
+	CloseThumbnail *model.Media `json:"closeThumbnail"`
 }

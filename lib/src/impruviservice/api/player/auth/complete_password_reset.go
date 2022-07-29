@@ -4,6 +4,7 @@ import (
 	"impruviService/exceptions"
 	passwordResetCodeFacade "impruviService/facade/passwordresetcode"
 	playerFacade "impruviService/facade/player"
+	"log"
 )
 
 type CompletePasswordResetRequest struct {
@@ -13,6 +14,13 @@ type CompletePasswordResetRequest struct {
 }
 
 func CompletePasswordReset(request *CompletePasswordResetRequest) error {
+	log.Printf("CompletePasswordResetRequest: %+v\n", request)
+	err := validateCompletePasswordResetRequest(request)
+	if err != nil {
+		log.Printf("[WARN] invalid CompletePasswordResetRequest: %v\n", err)
+		return err
+	}
+
 	exists, err := passwordResetCodeFacade.Exists(request.Email, request.Code)
 	if err != nil {
 		return err
@@ -28,4 +36,17 @@ func CompletePasswordReset(request *CompletePasswordResetRequest) error {
 	}
 	_, err = playerFacade.UpdatePassword(player.PlayerId, request.Password)
 	return err
+}
+
+func validateCompletePasswordResetRequest(request *CompletePasswordResetRequest) error {
+	if request.Email == "" {
+		return exceptions.InvalidRequestError{Message: "Email cannot be null/empty"}
+	}
+	if request.Code == "" {
+		return exceptions.InvalidRequestError{Message: "Code cannot be null/empty"}
+	}
+	if request.Password == "" {
+		return exceptions.InvalidRequestError{Message: "Password cannot be null/empty"}
+	}
+	return nil
 }
