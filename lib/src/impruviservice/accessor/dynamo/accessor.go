@@ -9,6 +9,7 @@ import (
 	"impruviService/exceptions"
 	"log"
 	"reflect"
+	"sync"
 )
 
 type Key struct {
@@ -159,8 +160,6 @@ func (m *DynamoDBMapper) Put(item interface{}) error {
 		return err
 	}
 
-	log.Printf("Item before: %v\n", av)
-
 	// GSI keys (if present) must contain a value. MarshalMap automatically adds an entry to the map even
 	// for null values which causes put to fail. We need to remove these keys
 	for k, v := range av {
@@ -169,7 +168,7 @@ func (m *DynamoDBMapper) Put(item interface{}) error {
 		}
 	}
 
-	log.Printf("Item: %v\n", av)
+	log.Printf("Putting item: %v\n", av)
 
 	input := &dynamodb.PutItemInput{
 		Item:      av,
@@ -196,58 +195,107 @@ func (m *DynamoDBMapper) Delete(key Key) error {
 	return err
 }
 
-func (m *DynamoDBMapper) Scan() (chan interface{}, chan error, chan bool) {
+func (m *DynamoDBMapper) Scan() (interface{}, error) {
 	itemConvertedChan := make(chan interface{})
 	errorChan := make(chan error)
-	doneChan := make(chan bool)
+
+	var wg sync.WaitGroup
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func(segment int) {
+			defer wg.Done()
+			m.scanSegment(int64(segment), 10, itemConvertedChan, errorChan)
+		}(i)
+	}
 
 	go func() {
-		defer func() {
-			doneChan <- true
-			close(doneChan)
-			close(errorChan)
-			close(itemConvertedChan)
-		}()
+		wg.Wait()
+		log.Printf("Finished waiting")
+		close(itemConvertedChan)
+		close(errorChan)
+	}()
 
-		lastEvaluatedKey, err := m.scanPage(itemConvertedChan, nil)
-		if err != nil {
-			errorChan <- err
-			return
+	itemsConverted := reflect.MakeSlice(reflect.SliceOf(m.itemType), 0, 0)
+	errors := make([]error, 0)
+
+	for {
+		select {
+		case itemConverted, ok := <-itemConvertedChan:
+			if !ok {
+				log.Printf("itemConvertedChan closed")
+				itemConvertedChan = nil
+			} else {
+				log.Printf("itemConvertedChan had item")
+				itemsConverted = reflect.Append(itemsConverted, reflect.ValueOf(itemConverted))
+			}
+		case err, ok := <-errorChan:
+			if !ok {
+				log.Printf("errorChan closed")
+				errorChan = nil
+			} else {
+				log.Printf("errorChan had error")
+				errors = append(errors, err)
+			}
 		}
 
-		for len(lastEvaluatedKey) > 0 {
-			lastEvaluatedKey, err = m.scanPage(itemConvertedChan, lastEvaluatedKey)
+		if itemConvertedChan == nil && errorChan == nil {
+			log.Printf("both channels null. breaking")
+			break
+		}
+	}
+
+	if len(errors) > 0 {
+		return nil, errors[0]
+	}
+
+	return itemsConverted.Interface(), nil
+}
+
+func (m *DynamoDBMapper) scanSegment(segment, totalSegments int64, itemConvertedChan chan interface{}, errorChan chan error) {
+	// Inspiration from: https://github.com/clearbit/go-ddb/blob/master/scanner.go. Look here if we
+	// require rate limiting
+	var lastEvaluatedKey map[string]*dynamodb.AttributeValue
+
+	for {
+		// scan params
+		params := &dynamodb.ScanInput{
+			TableName:     aws.String(m.tableName),
+			Segment:       aws.Int64(segment),
+			TotalSegments: aws.Int64(totalSegments),
+		}
+
+		// last evaluated key
+		if lastEvaluatedKey != nil {
+			params.ExclusiveStartKey = lastEvaluatedKey
+		}
+
+		log.Printf("Scan params: %+v\n", params)
+		// scan, sleep if rate limited
+		result, err := m.dynamo.Scan(params)
+		log.Printf("Was allowed to finish")
+		if err != nil {
+			log.Printf("Error while scanning table: %v. Error: %v\n", m.tableName, err)
+			continue
+		}
+
+		log.Printf("Result.Items: %v\n", len(result.Items))
+		for _, item := range result.Items {
+			itemConverted, err := m.convertItem(item)
 			if err != nil {
+				log.Printf("Error while converting item %+v while scanning table: %v. Error: %v\n", item, m.tableName, err)
 				errorChan <- err
 				return
 			}
-		}
-	}()
 
-	return itemConvertedChan, errorChan, doneChan
-}
-
-func (m *DynamoDBMapper) scanPage(itemConvertedChan chan interface{}, lastEvaluatedKey map[string]*dynamodb.AttributeValue) (map[string]*dynamodb.AttributeValue, error) {
-	result, err := m.dynamo.Scan(&dynamodb.ScanInput{
-		TableName:         aws.String(m.tableName),
-		ExclusiveStartKey: lastEvaluatedKey,
-	})
-	if err != nil {
-		log.Printf("Error while scanning table: %v with. %v\n", m.tableName, err)
-		return nil, err
-	}
-
-	for _, item := range result.Items {
-		itemConverted, err := m.convertItem(item)
-		if err != nil {
-			log.Printf("Error while scanning table: %v with. %v\n", m.tableName, err)
-			return nil, err
+			itemConvertedChan <- itemConverted
 		}
 
-		itemConvertedChan <- itemConverted
-	}
+		if result.LastEvaluatedKey == nil {
+			return
+		}
 
-	return result.LastEvaluatedKey, nil
+		lastEvaluatedKey = result.LastEvaluatedKey
+	}
 }
 
 // DynamoDB batch get limit is 100 items. Split larger lists into lists of smaller lists

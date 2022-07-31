@@ -21,22 +21,11 @@ var mapper = dynamo.New(
 	})
 
 func ListPlayers() ([]*PlayerDB, error) {
-	players := make([]*PlayerDB, 0)
-	done := false
-	itemChan, errorChan, doneChan := mapper.Scan()
-
-	for !done {
-		select {
-		case coach := <-itemChan:
-			players = append(players, coach.(*PlayerDB))
-		case err := <-errorChan:
-			return nil, err
-		case d := <-doneChan:
-			done = d
-		}
+	items, err := mapper.Scan()
+	if err != nil {
+		return nil, err
 	}
-
-	return players, nil
+	return items.([]*PlayerDB), err
 }
 
 func GetPlayerById(playerId string) (*PlayerDB, error) {

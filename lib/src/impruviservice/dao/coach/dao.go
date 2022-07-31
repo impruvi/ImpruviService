@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"impruviService/accessor/dynamo"
 	"impruviService/constants/tablenames"
+	"log"
 	"reflect"
 )
 
@@ -24,22 +25,13 @@ func GetCoachById(coachId string) (*CoachDB, error) {
 }
 
 func ListCoaches() ([]*CoachDB, error) {
-	coaches := make([]*CoachDB, 0)
-	done := false
-	itemChan, errorChan, doneChan := mapper.Scan()
-
-	for !done {
-		select {
-		case coach := <-itemChan:
-			coaches = append(coaches, coach.(*CoachDB))
-		case err := <-errorChan:
-			return nil, err
-		case d := <-doneChan:
-			done = d
-		}
+	items, err := mapper.Scan()
+	if err != nil {
+		return nil, err
 	}
+	log.Printf("Items: %+v\n", items)
 
-	return coaches, nil
+	return items.([]*CoachDB), nil
 }
 
 func PutCoach(coach *CoachDB) error {
