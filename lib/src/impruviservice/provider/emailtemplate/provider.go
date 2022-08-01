@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func GetSubscriptionCreateHtml(player *playerFacade.Player, coach *coachDao.CoachDB) string {
+func GetSubscriptionCreatedCoachEmailHtml(player *playerFacade.Player, coach *coachDao.CoachDB) string {
 	return fmt.Sprintf(`
 <div>%s,</div>
 <br />
@@ -47,7 +47,7 @@ func GetSubscriptionCreateHtml(player *playerFacade.Player, coach *coachDao.Coac
 		player.LongTermGoal)
 }
 
-func GetSubscriptionCreatedText(player *playerFacade.Player, coach *coachDao.CoachDB) string {
+func GetSubscriptionCreatedCoachEmailText(player *playerFacade.Player, coach *coachDao.CoachDB) string {
 	return fmt.Sprintf(`
 %s,
  
@@ -79,6 +79,29 @@ Long term goals: %s
 		getTrainingLocationListDisplayValue(player.AvailableTrainingLocations),
 		player.ShortTermGoal,
 		player.LongTermGoal)
+}
+
+func GetSubscriptionCreatedPlayerEmailHtml(player *playerFacade.Player, coach *coachDao.CoachDB) string {
+	return fmt.Sprintf(`
+%s %s, 
+ 
+Congratulations on starting your first subscription plan with imprüvi! Coach %s %s is looking forward to working with you to develop your skills. 
+ 
+To start training, download the Impruvi app on the App Store <embed link to download?>. To login on the app, use the same email and password you used to create your account on the website.
+ 
+We are so grateful and excited that you are part of our company’s early development stages. Our founding vision was to create a platform that helps players like you achieve their goals. We strive to create an impactful experience every step of the way, so please don’t hesitate to reach out if you have any questions, concerns or ideas that would make your experience better. 
+ 
+Reach us anytime at ryan@impruviapp.com or 720-233-1012. 
+
+ 
+Imprüvi Founders, 
+ 
+Ryan Crowley and John Magnus
+`,
+		player.FirstName,
+		player.LastName,
+		coach.FirstName,
+		coach.LastName)
 }
 
 func getTrainingLocationListDisplayValue(trainingLocations []string) string {

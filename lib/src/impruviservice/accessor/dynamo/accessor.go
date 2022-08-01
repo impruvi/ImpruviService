@@ -1,6 +1,7 @@
 package dynamo
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -168,7 +169,11 @@ func (m *DynamoDBMapper) Put(item interface{}) error {
 		}
 	}
 
-	log.Printf("Putting item: %v\n", av)
+	bytes, err := json.Marshal(av)
+	if err != nil {
+		log.Printf("Error while serializing item for logging: %+v. error: %v\n", av, err)
+	}
+	log.Printf("Putting item: %v\n", string(bytes))
 
 	input := &dynamodb.PutItemInput{
 		Item:      av,

@@ -11,6 +11,7 @@ import * as cloudfrontOrigins from '@aws-cdk/aws-cloudfront-origins';
 import * as certificateManager from '@aws-cdk/aws-certificatemanager';
 import * as stepFunction from '@aws-cdk/aws-stepfunctions';
 import * as stepFunctionTasks from '@aws-cdk/aws-stepfunctions-tasks';
+import * as mediaconvert from '@aws-cdk/aws-mediaconvert';
 
 
 const STRIPE_SECRET_KEY = 'sk_test_51LIhrlKA3EgJIYsfR79B9PLo9RVRXr66oAL70oOO8XUZARIk2QTCkM3vKXdm7Bp4oo9T8aRrFEj6kvroWsndlM7F00c5h6D8YY';
@@ -30,18 +31,60 @@ export class ImpruviServiceStack extends cdk.Stack {
     super(scope, id, props);
     this.domain = props.domain;
 
-    const iamRole = this.createIAMRole(this.domain);
+    const iamRole = this.createIAMRole();
     this.createDynamoTables();
     this.createApiResources(iamRole);
-    this.createAsyncLambdaResources(iamRole);
-    this.createS3Bucket('impruvi-media');
+    this.createFixedReminderLambda(iamRole);
+    this.createMediaBucket();
     this.createCloudfrontDistribution();
     this.createReminderStepFunction(iamRole);
+    this.createMediaConvertQueue();
+    this.createMediaConvertHandlerLambda(iamRole);
   }
 
-  createIAMRole = (domain: string) => {
-    return new iam.Role(this, `${domain}-ImpruviServiceRole`, {
-      roleName: `${domain}-ImpruviServiceRole`,
+  createMediaConvertQueue = () => {
+    new mediaconvert.CfnQueue(this, `${this.domain}-impruvi-service-queue`, {
+      name: `${this.domain}-impruvi-service-queue`,
+      description: 'queue for transcoding videos',
+      pricingPlan: 'ON_DEMAND',
+    })
+  }
+
+  createMediaConvertHandlerLambda = (iamRole: any) => {
+    const eventHandler = new lambda.Function(this, `${this.domain}-impruvi-service-mediaconvert-event-handler`, {
+      functionName: `${this.domain}-impruvi-service-mediaconvert-event-handler`,
+      runtime: lambda.Runtime.GO_1_X,
+      handler: 'ImpruviService',
+      role: iamRole,
+      code: lambda.Code.fromAsset(path.join(__dirname, '/build')),
+      memorySize: 2048,
+      timeout:  cdk.Duration.minutes(5),
+      environment: {
+        DOMAIN: this.domain,
+        STRIPE_SECRET_KEY: STRIPE_SECRET_KEY,
+        WEB_HOOK_SIGNING_SECRET: WEB_HOOK_SIGNING_SECRET
+      },
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    new events.Rule(this, `${this.domain}-impruvi-service-mediaconvert-event`, {
+      ruleName: `${this.domain}-impruvi-service-mediaconvert-event`,
+      eventPattern: {
+        source: ["aws.mediaconvert"],
+        detailType: ["MediaConvert Job State Change"],
+        detail: {
+          status: ["ERROR", "COMPLETE"]
+        }
+      },
+      targets: [
+        new eventsTargets.LambdaFunction(eventHandler, {})
+      ],
+    });
+  }
+
+  createIAMRole = () => {
+    return new iam.Role(this, `${this.domain}-ImpruviServiceRole`, {
+      roleName: `${this.domain}-ImpruviServiceRole`,
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
       managedPolicies: [
         {managedPolicyArn: 'arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess'},
@@ -52,6 +95,7 @@ export class ImpruviServiceStack extends cdk.Stack {
         {managedPolicyArn: 'arn:aws:iam::aws:policy/AmazonSNSFullAccess'},
         {managedPolicyArn: 'arn:aws:iam::aws:policy/AmazonSESFullAccess'},
         {managedPolicyArn: 'arn:aws:iam::aws:policy/AWSStepFunctionsFullAccess'},
+        {managedPolicyArn: 'arn:aws:iam::aws:policy/AWSElementalMediaConvertFullAccess'}
       ]
     });
   };
@@ -114,9 +158,9 @@ export class ImpruviServiceStack extends cdk.Stack {
     });
   };
 
-  createS3Bucket = (bucketName: string) => {
-    const bucket = new s3.Bucket(this, `${this.domain}-${bucketName}-bucket`, {
-      bucketName: `${this.domain}-${bucketName}-bucket`,
+  createMediaBucket = () => {
+    const bucket = new s3.Bucket(this, `${this.domain}-impruvi-media-bucket`, {
+      bucketName: `${this.domain}-impruvi-media-bucket`,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       cors: [
         {
@@ -142,7 +186,7 @@ export class ImpruviServiceStack extends cdk.Stack {
       ]
     });
 
-    const bucketPolicy = new s3.BucketPolicy(this, `${this.domain}-${bucketName}-policy`, {
+    const bucketPolicy = new s3.BucketPolicy(this, `${this.domain}-impruvi-media-policy`, {
       bucket: bucket
     });
 
@@ -201,7 +245,7 @@ export class ImpruviServiceStack extends cdk.Stack {
     });
   }
 
-  createAsyncLambdaResources = (iamRole: any) => {
+  createFixedReminderLambda = (iamRole: any) => {
     const notificationSender = new lambda.Function(this, `${this.domain}-impruvi-service-fixed-reminder-notification-sender`, {
       functionName: `${this.domain}-impruvi-service-fixed-reminder-notification-sender`,
       runtime: lambda.Runtime.GO_1_X,

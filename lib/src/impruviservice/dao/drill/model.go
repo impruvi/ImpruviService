@@ -8,6 +8,14 @@ const coachIdIndexName = "coachId-index"
 const coachIdAttr = "coachId"
 const drillIdAttr = "drillId"
 
+type DemoAngle string
+
+const (
+	FrontAngle DemoAngle = "FRONT"
+	SideAngle  DemoAngle = "SIDE"
+	CloseAngle DemoAngle = "CLOSE"
+)
+
 type DrillDB struct {
 	DrillId     string         `json:"drillId"`
 	CoachId     string         `json:"coachId"`

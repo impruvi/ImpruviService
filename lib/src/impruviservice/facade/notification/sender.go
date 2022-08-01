@@ -196,8 +196,8 @@ func SendSubscriptionCreatedNotifications(player *playerFacade.Player) error {
 	return sesAccessor.SendEmail(
 		coach.Email,
 		"NEW SUBSCRIBER, ACTION REQUIRED",
-		emailTemplateProvider.GetSubscriptionCreateHtml(player, coach),
-		emailTemplateProvider.GetSubscriptionCreatedText(player, coach))
+		emailTemplateProvider.GetSubscriptionCreatedCoachEmailHtml(player, coach),
+		emailTemplateProvider.GetSubscriptionCreatedCoachEmailText(player, coach))
 }
 
 func SendTrainingPlanCreatedNotifications(player *playerFacade.Player, numberOfSessions int) error {

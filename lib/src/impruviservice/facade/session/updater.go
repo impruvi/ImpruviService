@@ -3,6 +3,7 @@ package session
 import (
 	"errors"
 	"fmt"
+	mediaConvertAccessor "impruviService/accessor/mediaconvert"
 	sessionDao "impruviService/dao/session"
 	"impruviService/exceptions"
 	notificationFacade "impruviService/facade/notification"
@@ -83,6 +84,11 @@ func CreateFeedback(playerId string, sessionNumber int, drillId, fileLocation, t
 		return err
 	}
 
+	err = startFeedbackMediaConversion(drillId, fileLocation)
+	if err != nil {
+		return err
+	}
+
 	if session.IsFeedbackComplete() {
 		err = notificationFacade.SendFeedbackNotifications(playerId)
 		if err != nil {
@@ -119,6 +125,11 @@ func CreateSubmission(playerId string, sessionNumber int, drillId, fileLocation,
 		return err
 	}
 
+	err = startSubmissionMediaConversion(drillId, fileLocation)
+	if err != nil {
+		return err
+	}
+
 	if session.IsSubmissionComplete() {
 		log.Printf("Completed session: %v\n", session)
 		err = notificationFacade.SendSubmissionNotifications(playerId)
@@ -146,6 +157,24 @@ func findDrill(drills []*sessionDao.SessionDrillDB, drillId string) (*sessionDao
 		}
 	}
 	return nil, errors.New(fmt.Sprintf("drill %v does not exist in drills: %v\n.", drillId, drills))
+}
+
+func startSubmissionMediaConversion(drillId, fileLocation string) error {
+	return mediaConvertAccessor.StartJob(fileLocation, &mediaConvertAccessor.Metadata{
+		Type: mediaConvertAccessor.SubmissionVideo,
+		SubmissionVideoMetadata: mediaConvertAccessor.SubmissionVideoMetadata{
+			DrillId: drillId,
+		},
+	})
+}
+
+func startFeedbackMediaConversion(drillId, fileLocation string) error {
+	return mediaConvertAccessor.StartJob(fileLocation, &mediaConvertAccessor.Metadata{
+		Type: mediaConvertAccessor.FeedbackVideo,
+		FeedbackVideoMetadata: mediaConvertAccessor.FeedbackVideoMetadata{
+			DrillId: drillId,
+		},
+	})
 }
 
 func decrementAllSessionsAbove(sessionNumber int, playerId string) error {

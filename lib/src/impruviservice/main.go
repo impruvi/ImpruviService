@@ -20,6 +20,7 @@ import (
 	"impruviService/api/subscriptionplan"
 	"impruviService/api/uploadurl"
 	"impruviService/api/warmup"
+	"impruviService/handler/mediaconvertevent"
 	"impruviService/handler/reminders/dynamic"
 	"impruviService/handler/reminders/fixed"
 	"impruviService/router"
@@ -96,6 +97,9 @@ func (h Handler) Invoke(ctx context.Context, event []byte) ([]byte, error) {
 		return lambda.NewHandler(fixed.HandleSendFixedRemindersEvent).Invoke(ctx, event)
 	} else if strings.Contains(lc.InvokedFunctionArn, "impruvi-service-dynamic-reminder-notification-sender") {
 		return lambda.NewHandler(dynamic.HandleSendDynamicRemindersEvent).Invoke(ctx, event)
+	} else if strings.Contains(lc.InvokedFunctionArn, "impruvi-service-mediaconvert-event") {
+		log.Printf("In impruvi-service-mediaconvert-event")
+		return lambda.NewHandler(mediaconvertevent.HandleMediaConvertEvent).Invoke(ctx, event)
 	} else {
 		log.Printf(fmt.Sprintf("Unexpected lambda context: %s", lc.InvokedFunctionArn))
 		return nil, errors.New(fmt.Sprintf("Unexpected lambda context: %s", lc.InvokedFunctionArn))
