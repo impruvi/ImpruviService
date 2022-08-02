@@ -5,6 +5,8 @@ import (
 	sessionDao "impruviService/dao/session"
 	coachFacade "impruviService/facade/coach"
 	playerFacade "impruviService/facade/player"
+	stripeFacade "impruviService/facade/stripe"
+	"log"
 	"sort"
 )
 
@@ -22,6 +24,12 @@ func GetInboxForPlayer(playerId string) ([]*InboxEntry, error) {
 		return make([]*InboxEntry, 0), nil
 	}
 
+	subscription, err := stripeFacade.GetSubscription(player.StripeCustomerId)
+	if err != nil {
+		log.Printf("Error getting subscription: %v\n", err)
+		return nil, err
+	}
+
 	coach, err := coachFacade.GetCoachById(player.CoachId)
 	var headshotFileLocation = ""
 	if coach.Headshot != nil {
@@ -35,7 +43,7 @@ func GetInboxForPlayer(playerId string) ([]*InboxEntry, error) {
 
 	entries := make([]*InboxEntry, 0)
 	entries = append(entries, &InboxEntry{
-		CreationDateEpochMillis: player.CreationDateEpochMillis,
+		CreationDateEpochMillis: subscription.RecurrenceStartDateEpochMillis,
 		Actor:                   coachActor,
 		Type:                    Message,
 		Metadata: map[string]string{

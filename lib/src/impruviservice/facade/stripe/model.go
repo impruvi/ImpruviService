@@ -7,6 +7,7 @@ type Subscription struct {
 	CurrentPeriodStartDateEpochMillis int64             `json:"currentPeriodStartDateEpochMillis"`
 	CurrentPeriodEndDateEpochMillis   int64             `json:"currentPeriodEndDateEpochMillis"`
 	PlayerId                          string            `json:"playerId"`
+	RecurrenceStartDateEpochMillis    int64             `json:"recurrenceStartDateEpochMillis"`
 }
 
 type SubscriptionPlan struct {

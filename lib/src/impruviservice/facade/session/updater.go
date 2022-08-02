@@ -84,7 +84,7 @@ func CreateFeedback(playerId string, sessionNumber int, drillId, fileLocation, t
 		return err
 	}
 
-	err = startFeedbackMediaConversion(drillId, fileLocation)
+	err = startFeedbackMediaConversion(session.PlayerId, drillId, session.SessionNumber, fileLocation)
 	if err != nil {
 		return err
 	}
@@ -125,7 +125,7 @@ func CreateSubmission(playerId string, sessionNumber int, drillId, fileLocation,
 		return err
 	}
 
-	err = startSubmissionMediaConversion(drillId, fileLocation)
+	err = startSubmissionMediaConversion(session.PlayerId, drillId, session.SessionNumber, fileLocation)
 	if err != nil {
 		return err
 	}
@@ -159,20 +159,24 @@ func findDrill(drills []*sessionDao.SessionDrillDB, drillId string) (*sessionDao
 	return nil, errors.New(fmt.Sprintf("drill %v does not exist in drills: %v\n.", drillId, drills))
 }
 
-func startSubmissionMediaConversion(drillId, fileLocation string) error {
+func startSubmissionMediaConversion(playerId, drillId string, sessionNumber int, fileLocation string) error {
 	return mediaConvertAccessor.StartJob(fileLocation, &mediaConvertAccessor.Metadata{
 		Type: mediaConvertAccessor.SubmissionVideo,
-		SubmissionVideoMetadata: mediaConvertAccessor.SubmissionVideoMetadata{
-			DrillId: drillId,
+		SubmissionVideoMetadata: &mediaConvertAccessor.SubmissionVideoMetadata{
+			DrillId:       drillId,
+			PlayerId:      playerId,
+			SessionNumber: sessionNumber,
 		},
 	})
 }
 
-func startFeedbackMediaConversion(drillId, fileLocation string) error {
+func startFeedbackMediaConversion(playerId, drillId string, sessionNumber int, fileLocation string) error {
 	return mediaConvertAccessor.StartJob(fileLocation, &mediaConvertAccessor.Metadata{
 		Type: mediaConvertAccessor.FeedbackVideo,
-		FeedbackVideoMetadata: mediaConvertAccessor.FeedbackVideoMetadata{
-			DrillId: drillId,
+		FeedbackVideoMetadata: &mediaConvertAccessor.FeedbackVideoMetadata{
+			DrillId:       drillId,
+			PlayerId:      playerId,
+			SessionNumber: sessionNumber,
 		},
 	})
 }

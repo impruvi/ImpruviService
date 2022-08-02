@@ -36,10 +36,10 @@ type DemoVideoMedata struct {
 }
 
 type Metadata struct {
-	Type                    MediaType               `json:"type"`
-	FeedbackVideoMetadata   FeedbackVideoMetadata   `json:"feedbackVideoMetadata"`
-	SubmissionVideoMetadata SubmissionVideoMetadata `json:"submissionVideoMetadata"`
-	DemoVideoMedata         DemoVideoMedata         `json:"demoVideoMedata"`
+	Type                    MediaType                `json:"type"`
+	FeedbackVideoMetadata   *FeedbackVideoMetadata   `json:"feedbackVideoMetadata"`
+	SubmissionVideoMetadata *SubmissionVideoMetadata `json:"submissionVideoMetadata"`
+	DemoVideoMedata         *DemoVideoMedata         `json:"demoVideoMedata"`
 }
 
 const metadataKey = "metadata"

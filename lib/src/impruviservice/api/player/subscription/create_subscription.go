@@ -12,6 +12,7 @@ import (
 	sessionFacade "impruviService/facade/session"
 	stripeFacade "impruviService/facade/stripe"
 	"impruviService/model"
+	"impruviService/util"
 	"log"
 )
 
@@ -68,7 +69,7 @@ func CreateSubscription(request *CreateSubscriptionRequest) error {
 		if err != nil {
 			return err
 		}
-		err = stripeFacade.CreateSubscription(player, request.PaymentMethodId, request.SubscriptionPlanRef)
+		err = stripeFacade.CreateSubscription(player, util.GetCurrentTimeEpochMillis(), request.PaymentMethodId, request.SubscriptionPlanRef)
 		if err != nil {
 			log.Printf("Error while creating subscription: %v\n", err)
 			return err

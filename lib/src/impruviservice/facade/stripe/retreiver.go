@@ -41,6 +41,12 @@ func GetSubscription(stripeCustomerId string) (*Subscription, error) {
 			return nil, err
 		}
 
+		recurrenceStartDateEpochMillis, err := strconv.ParseInt(subscription.Metadata["recurrenceStartDateEpochMillis"], 10, 64)
+		if err != nil {
+			log.Printf("Error getting recurrenceStartDateEpochMillis. Error: %v\n", err)
+			return nil, err
+		}
+
 		subscriptions = append(subscriptions, &Subscription{
 			StripeSubscriptionId:              subscription.ID,
 			Plan:                              subscriptionPlan,
@@ -48,6 +54,7 @@ func GetSubscription(stripeCustomerId string) (*Subscription, error) {
 			CurrentPeriodStartDateEpochMillis: subscription.CurrentPeriodStart * 1000,
 			CurrentPeriodEndDateEpochMillis:   subscription.CurrentPeriodEnd * 1000,
 			PlayerId:                          subscription.Metadata["playerId"],
+			RecurrenceStartDateEpochMillis:    recurrenceStartDateEpochMillis,
 		})
 	}
 
@@ -57,6 +64,7 @@ func GetSubscription(stripeCustomerId string) (*Subscription, error) {
 	if len(subscriptions) > 1 {
 		log.Printf("Customer: %v has more than one subscription\n", stripeCustomerId)
 	}
+
 	return subscriptions[0], nil
 }
 

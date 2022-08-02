@@ -42,7 +42,7 @@ func startMediaConversion(newDrill, oldDrill *drillDao.DrillDB) error {
 	if shouldConvertFrontVideo(newDrill, oldDrill) {
 		err := mediaConvertAccessor.StartJob(newDrill.Demos.Front.FileLocation, &mediaConvertAccessor.Metadata{
 			Type: mediaConvertAccessor.DemoVideo,
-			DemoVideoMedata: mediaConvertAccessor.DemoVideoMedata{
+			DemoVideoMedata: &mediaConvertAccessor.DemoVideoMedata{
 				DrillId: newDrill.DrillId,
 				Angle:   string(drillDao.FrontAngle),
 			},
@@ -56,7 +56,7 @@ func startMediaConversion(newDrill, oldDrill *drillDao.DrillDB) error {
 	if shouldConvertSideVideo(newDrill, oldDrill) {
 		err := mediaConvertAccessor.StartJob(newDrill.Demos.Side.FileLocation, &mediaConvertAccessor.Metadata{
 			Type: mediaConvertAccessor.DemoVideo,
-			DemoVideoMedata: mediaConvertAccessor.DemoVideoMedata{
+			DemoVideoMedata: &mediaConvertAccessor.DemoVideoMedata{
 				DrillId: newDrill.DrillId,
 				Angle:   string(drillDao.SideAngle),
 			},
@@ -70,7 +70,7 @@ func startMediaConversion(newDrill, oldDrill *drillDao.DrillDB) error {
 	if shouldConvertCloseVideo(newDrill, oldDrill) {
 		err := mediaConvertAccessor.StartJob(newDrill.Demos.Close.FileLocation, &mediaConvertAccessor.Metadata{
 			Type: mediaConvertAccessor.DemoVideo,
-			DemoVideoMedata: mediaConvertAccessor.DemoVideoMedata{
+			DemoVideoMedata: &mediaConvertAccessor.DemoVideoMedata{
 				DrillId: newDrill.DrillId,
 				Angle:   string(drillDao.CloseAngle),
 			},

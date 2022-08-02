@@ -94,7 +94,12 @@ func (m *DynamoDBMapper) Query(key Key, options *QueryOptions) (interface{}, err
 		queryInput.KeyConditions = m.convertToDynamoKeyConditions(key, m.keySchema)
 	}
 
-	log.Printf("Query input: %v\n", queryInput)
+	bytes, err := json.Marshal(queryInput)
+	if err != nil {
+		log.Printf("Error while serializing query input for logging: %+v. error: %v\n", queryInput, err)
+	}
+	log.Printf("Query input: %v\n", string(bytes))
+
 	result, err := m.dynamo.Query(queryInput)
 	if err != nil {
 		log.Printf("Error while querying table: %v with key: %v, options: %v. %v\n", m.tableName, key, options, err)
@@ -215,7 +220,6 @@ func (m *DynamoDBMapper) Scan() (interface{}, error) {
 
 	go func() {
 		wg.Wait()
-		log.Printf("Finished waiting")
 		close(itemConvertedChan)
 		close(errorChan)
 	}()
@@ -227,24 +231,19 @@ func (m *DynamoDBMapper) Scan() (interface{}, error) {
 		select {
 		case itemConverted, ok := <-itemConvertedChan:
 			if !ok {
-				log.Printf("itemConvertedChan closed")
 				itemConvertedChan = nil
 			} else {
-				log.Printf("itemConvertedChan had item")
 				itemsConverted = reflect.Append(itemsConverted, reflect.ValueOf(itemConverted))
 			}
 		case err, ok := <-errorChan:
 			if !ok {
-				log.Printf("errorChan closed")
 				errorChan = nil
 			} else {
-				log.Printf("errorChan had error")
 				errors = append(errors, err)
 			}
 		}
 
 		if itemConvertedChan == nil && errorChan == nil {
-			log.Printf("both channels null. breaking")
 			break
 		}
 	}
@@ -274,16 +273,13 @@ func (m *DynamoDBMapper) scanSegment(segment, totalSegments int64, itemConverted
 			params.ExclusiveStartKey = lastEvaluatedKey
 		}
 
-		log.Printf("Scan params: %+v\n", params)
 		// scan, sleep if rate limited
 		result, err := m.dynamo.Scan(params)
-		log.Printf("Was allowed to finish")
 		if err != nil {
 			log.Printf("Error while scanning table: %v. Error: %v\n", m.tableName, err)
 			continue
 		}
 
-		log.Printf("Result.Items: %v\n", len(result.Items))
 		for _, item := range result.Items {
 			itemConverted, err := m.convertItem(item)
 			if err != nil {

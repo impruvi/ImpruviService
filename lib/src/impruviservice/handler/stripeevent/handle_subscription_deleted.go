@@ -8,7 +8,9 @@ import (
 	playerFacade "impruviService/facade/player"
 	dynamicReminderFacade "impruviService/facade/reminder/dynamic"
 	stripeFacade "impruviService/facade/stripe"
+	"impruviService/util"
 	"log"
+	"strconv"
 )
 
 func handleSubscriptionDeleted(subscription *stripe.Subscription) error {
@@ -18,7 +20,14 @@ func handleSubscriptionDeleted(subscription *stripe.Subscription) error {
 	player, err := playerFacade.GetPlayerById(playerId)
 	if err != nil {
 		log.Printf("Error while getting player by id: %v. error: %v\n", playerId, err)
+		return err
 	}
+	currentRecurrenceStartDateEpochMillis, err := strconv.ParseInt(subscription.Metadata["recurrenceStartDateEpochMillis"], 10, 64)
+	if err != nil {
+		log.Printf("Error while getting recurrence start date. Error: %v\n", err)
+		return err
+	}
+	coachId := subscription.Metadata["coachId"]
 
 	if player.QueuedSubscription != nil {
 		defaultPaymentMethod, err := getDefaultPaymentMethod(player.StripeCustomerId)
@@ -31,7 +40,13 @@ func handleSubscriptionDeleted(subscription *stripe.Subscription) error {
 			return exceptions.ResourceNotFoundError{Message: fmt.Sprintf("No default payment method for player: %v. Cannot update subscription.\n", player.PlayerId)}
 		}
 
-		err = stripeFacade.CreateSubscription(player, defaultPaymentMethod.PaymentMethodId, player.QueuedSubscription)
+		var recurrenceStartDateEpochMillis int64
+		if player.QueuedSubscription.CoachId == coachId {
+			recurrenceStartDateEpochMillis = currentRecurrenceStartDateEpochMillis
+		} else {
+			recurrenceStartDateEpochMillis = util.GetCurrentTimeEpochMillis()
+		}
+		err = stripeFacade.CreateSubscription(player, recurrenceStartDateEpochMillis, defaultPaymentMethod.PaymentMethodId, player.QueuedSubscription)
 		if err != nil {
 			log.Printf("Error while updating subscription to queued subscription: %v\n", err)
 			return err

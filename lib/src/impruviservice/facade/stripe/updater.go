@@ -10,6 +10,7 @@ import (
 	playerFacade "impruviService/facade/player"
 	"impruviService/model"
 	"log"
+	"strconv"
 )
 
 func CancelSubscription(stripeCustomerId string) error {
@@ -78,7 +79,7 @@ func ReactivateSubscription(stripeCustomerId string) error {
 	return err
 }
 
-func CreateSubscription(player *playerFacade.Player, paymentMethodId string, subscriptionPlanRef *model.SubscriptionPlanRef) error {
+func CreateSubscription(player *playerFacade.Player, recurrenceStartDateEpochMillis int64, paymentMethodId string, subscriptionPlanRef *model.SubscriptionPlanRef) error {
 	customer, err := getOrCreateCustomer(player)
 	if err != nil {
 		return err
@@ -90,7 +91,7 @@ func CreateSubscription(player *playerFacade.Player, paymentMethodId string, sub
 		return err
 	}
 
-	return subscribeToPlan(player.PlayerId, customer.ID, subscriptionPlanRef)
+	return subscribeToPlan(player.PlayerId, customer.ID, recurrenceStartDateEpochMillis, subscriptionPlanRef)
 }
 
 func getOrCreateCustomer(player *playerFacade.Player) (*stripe.Customer, error) {
@@ -161,7 +162,7 @@ func AttachPaymentMethodIfNotExists(stripeCustomerId, paymentMethodId string) er
 	return nil
 }
 
-func subscribeToPlan(playerId, stripeCustomerId string, subscriptionPlanRef *model.SubscriptionPlanRef) error {
+func subscribeToPlan(playerId, stripeCustomerId string, recurrenceStartDateEpochMillis int64, subscriptionPlanRef *model.SubscriptionPlanRef) error {
 	// TODO: we can probably remove the below
 	product, err := stripeProduct.Get(subscriptionPlanRef.StripeProductId, nil)
 	if err != nil {
@@ -180,6 +181,7 @@ func subscribeToPlan(playerId, stripeCustomerId string, subscriptionPlanRef *mod
 		},
 	}
 	subscriptionParams.AddMetadata("playerId", playerId)
+	subscriptionParams.AddMetadata("recurrenceStartDateEpochMillis", strconv.FormatInt(recurrenceStartDateEpochMillis, 10))
 	subscriptionParams.AddExpand("latest_invoice.payment_intent")
 	log.Printf("subscriptionParams: %v\n", subscriptionParams)
 	subscription, err := stripeSubscription.New(subscriptionParams)

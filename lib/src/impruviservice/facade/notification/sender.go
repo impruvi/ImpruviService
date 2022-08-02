@@ -193,6 +193,16 @@ func SendSubscriptionCreatedNotifications(player *playerFacade.Player) error {
 	} else {
 		log.Printf("Not sending push notification for subscription")
 	}
+
+	err = sesAccessor.SendEmail(
+		player.Email,
+		"We can’t wait for you to improve",
+		emailTemplateProvider.GetSubscriptionCreatedPlayerEmailHtml(player, coach),
+		emailTemplateProvider.GetSubscriptionCreatedPlayerEmailText(player, coach))
+	if err != nil {
+		return err
+	}
+
 	return sesAccessor.SendEmail(
 		coach.Email,
 		"NEW SUBSCRIBER, ACTION REQUIRED",

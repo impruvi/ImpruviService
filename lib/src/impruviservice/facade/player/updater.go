@@ -56,8 +56,10 @@ func ActivatePlayer(playerId, code string) (*Player, error) {
 		return nil, exceptions.NotAuthorizedError{Message: "Invalid activation code"}
 	}
 
+	currentDate := util.GetCurrentTimeEpochMillis()
 	playerDB.IsActive = true
-	playerDB.LastUpdatedDateEpochMillis = util.GetCurrentTimeEpochMillis()
+	playerDB.CreationDateEpochMillis = currentDate
+	playerDB.LastUpdatedDateEpochMillis = currentDate
 	err = playerDao.PutPlayer(playerDB)
 	if err != nil {
 		return nil, err
