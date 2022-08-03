@@ -17,7 +17,7 @@ type RequestRouter struct {
 }
 
 func (r *RequestRouter) Route(apiRequest events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
-	log.Printf("request body: %v", apiRequest.Body)
+	//log.Printf("request body: %v", apiRequest.Body)
 	log.Printf("request resource: %v", apiRequest.Resource)
 	log.Printf("headers: %v\n", apiRequest.Headers)
 
