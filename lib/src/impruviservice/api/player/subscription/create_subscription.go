@@ -9,7 +9,6 @@ import (
 	notificationFacade "impruviService/facade/notification"
 	playerFacade "impruviService/facade/player"
 	dynamicReminderFacade "impruviService/facade/reminder/dynamic"
-	sessionFacade "impruviService/facade/session"
 	stripeFacade "impruviService/facade/stripe"
 	"impruviService/model"
 	"impruviService/util"
@@ -75,6 +74,12 @@ func CreateSubscription(request *CreateSubscriptionRequest) error {
 			return err
 		}
 
+		player, err = playerFacade.GetPlayerById(player.PlayerId)
+		if err != nil {
+			log.Printf("Error while getting player after creating subscription: %v\n", err)
+			return err
+		}
+
 		err = createIntroSession(player, coach)
 		if err != nil {
 			log.Printf("Error while creating initial session: %v\n", err)
@@ -126,10 +131,21 @@ func createIntroSession(player *playerFacade.Player, coach *coachDao.CoachDB) er
 			Notes:   drill.Notes,
 		})
 	}
-	return sessionFacade.CreateSession(&sessionDao.SessionDB{
+
+	subscription, err := stripeFacade.GetSubscription(player.StripeCustomerId)
+	if err != nil {
+		log.Printf("Error getting subscription: %v\n", err)
+	}
+
+	return sessionDao.PutSession(&sessionDao.SessionDB{
 		PlayerId:       player.PlayerId,
 		Drills:         drills,
+		SessionNumber:  1,
 		IsIntroSession: true,
+		// this value must be >= the subscription start date value. Grab it from the subscription object itself
+		// to ensure this is the case
+		CreationDateEpochMillis:    subscription.CurrentPeriodStartDateEpochMillis,
+		LastUpdatedDateEpochMillis: subscription.CurrentPeriodStartDateEpochMillis,
 	})
 }
 

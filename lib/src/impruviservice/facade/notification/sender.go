@@ -72,7 +72,7 @@ func SendFeedbackReminderNotifications(playerId string, hoursRemaining int) erro
 		return err
 	}
 
-	snsAccessor.SendTextToSystem(fmt.Sprintf("Coach %v %v has %v hour(s) remain to provide feedback", coach.FirstName, coach.LastName, hoursRemaining))
+	snsAccessor.SendTextToSystem(fmt.Sprintf("Coach %v %v has %v hour(s) remaining to provide feedback", coach.FirstName, coach.LastName, hoursRemaining))
 	if coach.NotificationId != "" {
 		log.Printf("Sending push notification for feedback reminder to: %v. %v\n", coach.CoachId, coach.NotificationId)
 		var hourText string
@@ -118,7 +118,7 @@ func SendCreateTrainingPlanReminderNotifications(playerId string, hoursRemaining
 		return err
 	}
 
-	snsAccessor.SendTextToSystem(fmt.Sprintf("Coach %v %v has %v hour(s) remain to create a training plan", coach.FirstName, coach.LastName, hoursRemaining))
+	snsAccessor.SendTextToSystem(fmt.Sprintf("Coach %v %v has %v hour(s) remaining to create a training plan", coach.FirstName, coach.LastName, hoursRemaining))
 	if coach.NotificationId != "" {
 		log.Printf("Sending push notification for create training reminder to: %v. %v\n", coach.CoachId, coach.NotificationId)
 		var hourText string
@@ -227,7 +227,7 @@ func SendTrainingPlanCreatedNotifications(player *playerFacade.Player, numberOfS
 		log.Printf("Not sending push notification for training plan created")
 	}
 	return sesAccessor.SendEmail(
-		coach.Email,
+		player.Email,
 		fmt.Sprintf("Coach %v has created your training plan", coach.LastName),
 		fmt.Sprintf("<div>You have %v new training sessions. Get started!</div>", numberOfSessions),
 		fmt.Sprintf("You have %v new training sessions. Get started!", numberOfSessions))
