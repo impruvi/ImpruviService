@@ -7,12 +7,21 @@ import (
 	"log"
 )
 
-const systemPhoneNumber = "+14253277259"
+var systemPhoneNumbers = []string{
+	"+14253277259",
+	"+18084288591",
+}
 
 var snsClient = snsclient.GetClient()
 
 func SendTextToSystem(message string) error {
-	return SendTextMessage(systemPhoneNumber, message)
+	for _, phoneNumber := range systemPhoneNumbers {
+		err := SendTextMessage(phoneNumber, message)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func SendTextMessage(phoneNumber, message string) error {

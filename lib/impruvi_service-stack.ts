@@ -14,10 +14,25 @@ import * as stepFunctionTasks from '@aws-cdk/aws-stepfunctions-tasks';
 import * as mediaconvert from '@aws-cdk/aws-mediaconvert';
 
 
-const STRIPE_SECRET_KEY = 'sk_test_51LIhrlKA3EgJIYsfR79B9PLo9RVRXr66oAL70oOO8XUZARIk2QTCkM3vKXdm7Bp4oo9T8aRrFEj6kvroWsndlM7F00c5h6D8YY';
-const WEB_HOOK_SIGNING_SECRET = 'whsec_1GbPJpu2ibnLMJixHPcBuBSvOWiEO8Qm';
-
 const path = require('path');
+
+const getStripeSecretKey = (domain: string) => {
+  switch (domain) {
+    case 'beta':
+      return 'sk_test_51LIhrlKA3EgJIYsfR79B9PLo9RVRXr66oAL70oOO8XUZARIk2QTCkM3vKXdm7Bp4oo9T8aRrFEj6kvroWsndlM7F00c5h6D8YY';
+    default:
+      return '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'
+  }
+}
+
+const getWebhookSigningSecret = (domain: string) => {
+  switch (domain) {
+    case 'beta':
+      return 'whsec_1GbPJpu2ibnLMJixHPcBuBSvOWiEO8Qm';
+    default:
+      return 'whsec_y2tsLGSix8tE8MRDEfMHCL6ncy5CMSnW'
+  }
+}
 
 export interface ImpruviServiceStackProps extends cdk.StackProps {
   readonly domain: string;
@@ -61,8 +76,8 @@ export class ImpruviServiceStack extends cdk.Stack {
       timeout:  cdk.Duration.minutes(5),
       environment: {
         DOMAIN: this.domain,
-        STRIPE_SECRET_KEY: STRIPE_SECRET_KEY,
-        WEB_HOOK_SIGNING_SECRET: WEB_HOOK_SIGNING_SECRET
+        STRIPE_SECRET_KEY: getStripeSecretKey(this.domain),
+        WEB_HOOK_SIGNING_SECRET: getWebhookSigningSecret(this.domain)
       },
       tracing: lambda.Tracing.ACTIVE
     });
@@ -217,8 +232,8 @@ export class ImpruviServiceStack extends cdk.Stack {
       timeout:  cdk.Duration.minutes(5),
       environment: {
         DOMAIN: this.domain,
-        STRIPE_SECRET_KEY: STRIPE_SECRET_KEY,
-        WEB_HOOK_SIGNING_SECRET: WEB_HOOK_SIGNING_SECRET
+        STRIPE_SECRET_KEY: getStripeSecretKey(this.domain),
+        WEB_HOOK_SIGNING_SECRET: getWebhookSigningSecret(this.domain)
       },
       tracing: lambda.Tracing.ACTIVE
     });
@@ -256,8 +271,8 @@ export class ImpruviServiceStack extends cdk.Stack {
       timeout:  cdk.Duration.minutes(15),
       environment: {
         DOMAIN: this.domain,
-        STRIPE_SECRET_KEY: STRIPE_SECRET_KEY,
-        WEB_HOOK_SIGNING_SECRET: WEB_HOOK_SIGNING_SECRET
+        STRIPE_SECRET_KEY: getStripeSecretKey(this.domain),
+        WEB_HOOK_SIGNING_SECRET: getWebhookSigningSecret(this.domain)
       },
       tracing: lambda.Tracing.ACTIVE
     });
@@ -289,8 +304,8 @@ export class ImpruviServiceStack extends cdk.Stack {
       timeout:  cdk.Duration.seconds(10),
       environment: {
         DOMAIN: this.domain,
-        STRIPE_SECRET_KEY: STRIPE_SECRET_KEY,
-        WEB_HOOK_SIGNING_SECRET: WEB_HOOK_SIGNING_SECRET
+        STRIPE_SECRET_KEY: getStripeSecretKey(this.domain),
+        WEB_HOOK_SIGNING_SECRET: getWebhookSigningSecret(this.domain)
       },
       tracing: lambda.Tracing.ACTIVE
     });
