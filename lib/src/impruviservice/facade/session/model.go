@@ -14,6 +14,7 @@ type PlayerSessions struct {
 type Session struct {
 	PlayerId                   string          `json:"playerId"`
 	SessionNumber              int             `json:"sessionNumber"`
+	CoachId string `json:"coachId"`
 	Drills                     []*SessionDrill `json:"drills"`
 	CreationDateEpochMillis    int64           `json:"creationDateEpochMillis"`
 	LastUpdatedDateEpochMillis int64           `json:"lastUpdatedDateEpochMillis"`

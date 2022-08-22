@@ -5,21 +5,6 @@ import (
 	sessionDao "impruviService/dao/session"
 )
 
-func GetSessionsForPlayers(players []*playersDao.PlayerDB) ([]*PlayerSessions, error) {
-	playerSessions := make([]*PlayerSessions, 0)
-	for _, player := range players {
-		sessions, err := GetSessionsForPlayer(player.PlayerId)
-		if err != nil {
-			return nil, err
-		}
-
-		playerSessions = append(playerSessions, &PlayerSessions{
-			Player:   player,
-			Sessions: sessions,
-		})
-	}
-	return playerSessions, nil
-}
 
 func GetSessionsForPlayer(playerId string) ([]*Session, error) {
 	sessionDBs, err := sessionDao.GetSessions(playerId)
@@ -35,10 +20,34 @@ func GetSessionsForCoach(coachId string) ([]*PlayerSessions, error) {
 	if err != nil {
 		return nil, err
 	}
-	playerSessions, err := GetSessionsForPlayers(players)
+	playerSessions, err := getPlayerSessionsForCoach(players, coachId)
 	if err != nil {
-		return playerSessions, err
+		return nil, err
 	}
 
+
+
+	return playerSessions, nil
+}
+
+func getPlayerSessionsForCoach(players []*playersDao.PlayerDB, coachId string) ([]*PlayerSessions, error) {
+	playerSessions := make([]*PlayerSessions, 0)
+	for _, player := range players {
+		sessions, err := GetSessionsForPlayer(player.PlayerId)
+		if err != nil {
+			return nil, err
+		}
+
+		sessionsWithCoach := make([]*Session, 0)
+		for _, session := range sessions {
+			if session.CoachId == coachId {
+				sessionsWithCoach = append(sessionsWithCoach, session)
+			}
+		}
+		playerSessions = append(playerSessions, &PlayerSessions{
+			Player:   player,
+			Sessions: sessionsWithCoach,
+		})
+	}
 	return playerSessions, nil
 }

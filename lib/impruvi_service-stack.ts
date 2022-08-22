@@ -345,6 +345,7 @@ export class ImpruviServiceStack extends cdk.Stack {
         ['/player/subscription/get', [HttpMethod.POST]],
         ['/player/subscription/create', [HttpMethod.POST]],
         ['/player/subscription/cancel', [HttpMethod.POST]],
+        ['/player/subscription-history/get', [HttpMethod.POST]],
         ['/player/password-reset/initiate', [HttpMethod.POST]],
         ['/player/password-reset/validate-code', [HttpMethod.POST]],
         ['/player/password-reset/complete', [HttpMethod.POST]],

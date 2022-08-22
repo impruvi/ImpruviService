@@ -86,7 +86,9 @@ func CreateSubscription(player *playerFacade.Player, recurrenceStartDateEpochMil
 	}
 
 	log.Printf("Customer: %+v\n", customer)
-	err = AttachPaymentMethodIfNotExists(customer.ID, paymentMethodId)
+	if paymentMethodId != "" {
+		err = AttachPaymentMethodIfNotExists(customer.ID, paymentMethodId)
+	}
 	if err != nil {
 		return err
 	}

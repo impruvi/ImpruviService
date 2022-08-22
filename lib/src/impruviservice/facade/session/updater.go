@@ -7,9 +7,12 @@ import (
 	sessionDao "impruviService/dao/session"
 	"impruviService/exceptions"
 	notificationFacade "impruviService/facade/notification"
+	playerFacade "impruviService/facade/player"
 	dynamicReminderFacade "impruviService/facade/reminder/dynamic"
+	stripeFacade "impruviService/facade/stripe"
 	"impruviService/model"
 	"impruviService/util"
+	sessionUtil "impruviService/util/session"
 	"log"
 )
 
@@ -18,6 +21,12 @@ func CreateSession(session *sessionDao.SessionDB) error {
 	if err != nil {
 		return err
 	}
+
+	coachId, err := getCoachId(session.PlayerId)
+	if err != nil {
+		return err
+	}
+	session.CoachId = coachId
 
 	currentTimeMillis := util.GetCurrentTimeEpochMillis()
 	session.SessionNumber = latestSessionNumber + 1
@@ -31,6 +40,11 @@ func UpdateSession(session *sessionDao.SessionDB) error {
 	if err != nil {
 		return err
 	}
+	coachId, err := getCoachId(session.PlayerId)
+	if err != nil {
+		return err
+	}
+	session.CoachId = coachId
 
 	session.LastUpdatedDateEpochMillis = util.GetCurrentTimeEpochMillis()
 	session.CreationDateEpochMillis = currentSession.CreationDateEpochMillis
@@ -70,6 +84,10 @@ func CreateFeedback(playerId string, sessionNumber int, drillId, fileLocation, t
 	if err != nil {
 		return err
 	}
+	if drill.HasFeedback() {
+		log.Printf("Drill already has feedback")
+		return nil
+	}
 	currentTimeEpochMillis := util.GetCurrentTimeEpochMillis()
 	drill.Feedback = &model.Media{
 		UploadDateEpochMillis: currentTimeEpochMillis,
@@ -95,6 +113,38 @@ func CreateFeedback(playerId string, sessionNumber int, drillId, fileLocation, t
 			log.Printf("Error sending feedback notifications: %v\n", err)
 			return err
 		}
+
+		player, err := playerFacade.GetPlayerById(playerId)
+		if err != nil {
+			log.Printf("Error while getting player: %v. Error: %v\n", playerId, err)
+			return err
+		}
+
+		justCompletedTrial, err := hasCompletedTrial(player)
+		if err != nil {
+			return err
+		}
+
+		if justCompletedTrial {
+			player.CoachId = ""
+			err = playerFacade.UpdatePlayer(player)
+			if err != nil {
+				log.Printf("Error while removing coachId from player: %v\n", err)
+				return err
+			}
+
+			err = stripeFacade.CancelSubscription(player.StripeCustomerId)
+			if err != nil {
+				log.Printf("Error while cancelling subscription for player: %+v. Error: %v\n", player, err)
+				return err
+			}
+
+			err = notificationFacade.SendTrialEndedNotifications(player)
+			if err != nil {
+				log.Printf("Error while sending trial ended notifications: %v\n", err)
+				return err
+			}
+		}
 	}
 
 	return nil
@@ -109,6 +159,10 @@ func CreateSubmission(playerId string, sessionNumber int, drillId, fileLocation,
 	drill, err := findDrill(session.Drills, drillId)
 	if err != nil {
 		return err
+	}
+	if drill.HasSubmission() {
+		log.Printf("Drill already has submission")
+		return nil
 	}
 	currentTimeEpochMillis := util.GetCurrentTimeEpochMillis()
 	drill.Submission = &model.Media{
@@ -148,6 +202,14 @@ func CreateSubmission(playerId string, sessionNumber int, drillId, fileLocation,
 	}
 
 	return nil
+}
+
+func getCoachId(playerId string) (string, error){
+	player, err := playerFacade.GetPlayerById(playerId)
+	if err != nil {
+		return "", err
+	}
+	return player.CoachId, nil
 }
 
 func findDrill(drills []*sessionDao.SessionDrillDB, drillId string) (*sessionDao.SessionDrillDB, error) {
@@ -209,4 +271,22 @@ func decrementAllSessionsAbove(sessionNumber int, playerId string) error {
 	}
 
 	return nil
+}
+
+func hasCompletedTrial(player *playerFacade.Player) (bool, error) {
+	subscription, err := stripeFacade.GetSubscription(player.StripeCustomerId)
+	if err != nil {
+		return false, err
+	}
+
+	if !subscription.Plan.IsTrial {
+		return false, nil
+	}
+
+	sessions, err := sessionDao.GetSessions(player.PlayerId)
+	if err != nil {
+		return false, err
+	}
+
+	return sessionUtil.HasCompletedPlan(subscription, sessions), nil
 }

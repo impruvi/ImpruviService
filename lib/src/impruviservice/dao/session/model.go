@@ -11,6 +11,7 @@ const sessionNumberAttr = "sessionNumber"
 type SessionDB struct {
 	PlayerId                   string            `json:"playerId"`
 	SessionNumber              int               `json:"sessionNumber"`
+	CoachId string `json:"coachId"`
 	Drills                     []*SessionDrillDB `json:"drills"`
 	CreationDateEpochMillis    int64             `json:"creationDateEpochMillis"`
 	LastUpdatedDateEpochMillis int64             `json:"lastUpdatedDateEpochMillis"`
@@ -27,10 +28,18 @@ type SessionDrillDB struct {
 	Notes               string       `json:"notes"`
 }
 
+func (sd *SessionDrillDB) HasSubmission() bool {
+	return sd.Submission != nil && sd.Submission.IsPresent()
+}
+
+func (sd *SessionDrillDB) HasFeedback() bool {
+	return sd.Feedback!= nil && sd.Feedback.IsPresent()
+}
+
 func (s *SessionDB) IsSubmissionComplete() bool {
 	log.Printf("checking if submission complete for session: %v\n", s)
 	for _, drill := range s.Drills {
-		if drill.Submission == nil || !drill.Submission.IsPresent() {
+		if !drill.HasSubmission() {
 			return false
 		}
 	}
@@ -40,7 +49,7 @@ func (s *SessionDB) IsSubmissionComplete() bool {
 func (s *SessionDB) IsFeedbackComplete() bool {
 	log.Printf("checking if feedback complete for session: %v\n", s)
 	for _, drill := range s.Drills {
-		if drill.Feedback == nil || !drill.Feedback.IsPresent() {
+		if !drill.HasFeedback() {
 			log.Printf("Feedback is not complete")
 			return false
 		}

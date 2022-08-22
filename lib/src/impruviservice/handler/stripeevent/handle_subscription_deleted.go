@@ -73,10 +73,32 @@ func handleSubscriptionDeleted(subscription *stripe.Subscription) error {
 
 		return nil
 	} else {
-		err = notificationFacade.SendSubscriptionDidNotRenewNotifications(player)
+		player.CoachId = ""
+		err = playerFacade.UpdatePlayer(player)
 		if err != nil {
-			log.Printf("Error while updating subscription ended notifications: %v\n", err)
+			log.Printf("Error while removing coachId from player: %v\n", err)
 			return err
+		}
+
+		isTrial := false
+		if isTrialString, ok := subscription.Plan.Metadata["isTrial"]; ok {
+			isTrial, err = strconv.ParseBool(isTrialString)
+			log.Printf("Error while getting isTrial. Metadata: %+v. Error: %v\n", subscription.Plan.Metadata, err)
+			return err
+		}
+
+		if isTrial {
+			err = notificationFacade.SendTrialEndedNotifications(player)
+			if err != nil {
+				log.Printf("Error while sending trial ended notifications: %v\n", err)
+				return err
+			}
+		} else {
+			err = notificationFacade.SendSubscriptionDidNotRenewNotifications(player)
+			if err != nil {
+				log.Printf("Error while sending subscription ended notifications: %v\n", err)
+				return err
+			}
 		}
 	}
 

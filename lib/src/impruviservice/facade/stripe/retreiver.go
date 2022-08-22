@@ -13,13 +13,34 @@ import (
 )
 
 func GetSubscription(stripeCustomerId string) (*Subscription, error) {
+	subscriptions, err := getSubscriptionsWithStatus(stripeCustomerId, string(stripe.SubscriptionStatusActive))
+	if err != nil {
+		return nil, err
+	}
+
+	if len(subscriptions) == 0 {
+		return nil, exceptions.ResourceNotFoundError{Message: fmt.Sprintf("No active subscription exists for customer: %v\n", stripeCustomerId)}
+	}
+	if len(subscriptions) > 1 {
+		log.Printf("Customer: %v has more than one active subscription\n", stripeCustomerId)
+	}
+
+	return subscriptions[0], nil
+}
+
+func ListSubscriptions(stripeCustomerId string) ([]*Subscription, error) {
+	return getSubscriptionsWithStatus(stripeCustomerId, string(stripe.SubscriptionStatusAll))
+}
+
+func getSubscriptionsWithStatus(stripeCustomerId, status string) ([]*Subscription, error) {
 	if stripeCustomerId == "" {
-		return nil, nil
+		return make([]*Subscription, 0), nil
 	}
 	subscriptions := make([]*Subscription, 0)
 
 	iter := stripeSubscription.List(&stripe.SubscriptionListParams{
 		Customer: stripeCustomerId,
+		Status: status,
 	})
 	for iter.Next() {
 		subscription := iter.Subscription()
@@ -58,14 +79,7 @@ func GetSubscription(stripeCustomerId string) (*Subscription, error) {
 		})
 	}
 
-	if len(subscriptions) == 0 {
-		return nil, exceptions.ResourceNotFoundError{Message: fmt.Sprintf("No subscription exists for customer: %v\n", stripeCustomerId)}
-	}
-	if len(subscriptions) > 1 {
-		log.Printf("Customer: %v has more than one subscription\n", stripeCustomerId)
-	}
-
-	return subscriptions[0], nil
+	return subscriptions, nil
 }
 
 func GetSubscriptionPlan(stripeProductId, stripePriceId string) (*SubscriptionPlan, error) {
@@ -81,6 +95,15 @@ func GetSubscriptionPlan(stripeProductId, stripePriceId string) (*SubscriptionPl
 		return nil, err
 	}
 
+	isTrial := false
+	if isTrialString, ok := plan.Metadata["isTrial"]; ok {
+		isTrial, err = strconv.ParseBool(isTrialString)
+		if err != nil {
+			log.Printf("Error while getting isTrial. Metadata: %+v. Error: %v\n", plan.Metadata, err)
+			return nil, err
+		}
+	}
+
 	return &SubscriptionPlan{
 		StripeProductId:   stripeProductId,
 		StripePriceId:     stripePriceId,
@@ -88,6 +111,7 @@ func GetSubscriptionPlan(stripeProductId, stripePriceId string) (*SubscriptionPl
 		Type:              plan.Metadata["type"],
 		NumberOfTrainings: numberOfTrainings,
 		UnitAmount:        plan.Amount,
+		IsTrial:           isTrial,
 	}, nil
 }
 

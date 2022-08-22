@@ -53,11 +53,15 @@ func CreateSubscription(request *CreateSubscriptionRequest) error {
 			log.Printf("Error updating subscription to cancel at period end: %v\n", err)
 			return err
 		}
-		err = stripeFacade.AttachPaymentMethodIfNotExists(player.StripeCustomerId, request.PaymentMethodId)
-		if err != nil {
-			log.Printf("Error attaching payment method: %v to customer: %v: %v\n", request.PaymentMethodId, player.StripeCustomerId, err)
-			return err
+
+		if request.PaymentMethodId != "" {
+			err = stripeFacade.AttachPaymentMethodIfNotExists(player.StripeCustomerId, request.PaymentMethodId)
+			if err != nil {
+				log.Printf("Error attaching payment method: %v to customer: %v: %v\n", request.PaymentMethodId, player.StripeCustomerId, err)
+				return err
+			}
 		}
+
 		player.QueuedSubscription = request.SubscriptionPlanRef
 		return playerFacade.UpdatePlayer(player)
 	} else {
@@ -80,10 +84,31 @@ func CreateSubscription(request *CreateSubscriptionRequest) error {
 			return err
 		}
 
-		err = createIntroSession(player, coach)
+		subscriptionPlan, err := stripeFacade.GetSubscriptionPlan(request.SubscriptionPlanRef.StripeProductId, request.SubscriptionPlanRef.StripePriceId)
 		if err != nil {
-			log.Printf("Error while creating initial session: %v\n", err)
+			log.Printf("Error while getting subscription plan: %v\n", err)
 			return err
+		}
+		if subscriptionPlan.IsTrial {
+			err = stripeFacade.UpdateSubscriptionToCancelAtPeriodEnd(player.StripeCustomerId)
+			if err != nil {
+				log.Printf("Error while updating trial subscription to cancel at period end: %v\n", err)
+				return err
+			}
+		}
+
+		shouldCreateIntroSession, err := isFirstSubscriptionWithCoach(player.StripeCustomerId, coach.CoachId)
+		if err != nil {
+			return err
+		}
+		log.Printf("shouldCreateIntroSession: %v\n", shouldCreateIntroSession)
+
+		if shouldCreateIntroSession {
+			err = createIntroSession(player, coach)
+			if err != nil {
+				log.Printf("Error while creating initial session: %v\n", err)
+				return err
+			}
 		}
 
 		err = notificationFacade.SendSubscriptionCreatedNotifications(player)
@@ -118,6 +143,24 @@ func alreadyHasSubscription(player *playerFacade.Player) (bool, error) {
 	return true, nil
 }
 
+func isFirstSubscriptionWithCoach(stripeCustomerId, coachId string) (bool, error) {
+	log.Printf("isFirstSubscriptionWithCoach. stripeCustomerId: %v. coachId: %v\n", stripeCustomerId, coachId)
+	subscriptionHistory, err := stripeFacade.ListSubscriptions(stripeCustomerId)
+	if err != nil {
+		return false, err
+	}
+	log.Printf("subscriptionHistory: %v\n", subscriptionHistory)
+
+	subscriptionsWithCoach := 0
+	for _, subscription := range subscriptionHistory {
+		if subscription.Plan.CoachId == coachId {
+			subscriptionsWithCoach += 1
+		}
+	}
+
+	return subscriptionsWithCoach == 1, nil
+}
+
 func createIntroSession(player *playerFacade.Player, coach *coachDao.CoachDB) error {
 	coach, err := coachFacade.GetCoachById(player.CoachId)
 	if err != nil {
@@ -137,24 +180,27 @@ func createIntroSession(player *playerFacade.Player, coach *coachDao.CoachDB) er
 		log.Printf("Error getting subscription: %v\n", err)
 	}
 
+	latestSessionNumber, err := sessionDao.GetLatestSessionNumber(player.PlayerId)
+	if err != nil {
+		return err
+	}
+
 	return sessionDao.PutSession(&sessionDao.SessionDB{
 		PlayerId:       player.PlayerId,
 		Drills:         drills,
-		SessionNumber:  1,
-		IsIntroSession: true,
+		CoachId: coach.CoachId,
+		SessionNumber:  latestSessionNumber + 1,
+		//IsIntroSession: true, // TODO: do we even need this if we have trial plans?
 		// this value must be >= the subscription start date value. Grab it from the subscription object itself
 		// to ensure this is the case
-		CreationDateEpochMillis:    subscription.CurrentPeriodStartDateEpochMillis,
-		LastUpdatedDateEpochMillis: subscription.CurrentPeriodStartDateEpochMillis,
+		CreationDateEpochMillis:    subscription.CurrentPeriodStartDateEpochMillis + 1, // TODO: +1 here is only required due to a bug in mobile that should be fixed in next build
+		LastUpdatedDateEpochMillis: subscription.CurrentPeriodStartDateEpochMillis + 1,
 	})
 }
 
 func validateCreateSubscriptionRequest(request *CreateSubscriptionRequest) error {
 	if request.Token == "" {
 		return exceptions.InvalidRequestError{Message: "Token cannot be null/empty"}
-	}
-	if request.PaymentMethodId == "" {
-		return exceptions.InvalidRequestError{Message: "PaymentMethodId cannot be null/empty"}
 	}
 	if request.SubscriptionPlanRef == nil || request.SubscriptionPlanRef.CoachId == "" || request.SubscriptionPlanRef.StripeProductId == "" || request.SubscriptionPlanRef.StripePriceId == "" {
 		return exceptions.InvalidRequestError{Message: "SubscriptionPlanRef must have a coachId, productId, and priceId"}

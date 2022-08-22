@@ -61,6 +61,7 @@ var requestRouter = router.RequestRouter{
 		"/player/subscription/create":          playerSubscription.CreateSubscription,
 		"/player/subscription/get":             playerSubscription.GetSubscription,
 		"/player/subscription/cancel":          playerSubscription.CancelSubscription,
+		"/player/subscription-history/get": playerSubscription.GetSubscriptionHistory,
 		"/player/update":                       player.UpdatePlayer,
 		"/player/get":                          player.GetPlayer,
 		"/player/inbox/get":                    inbox.GetInboxForPlayer,

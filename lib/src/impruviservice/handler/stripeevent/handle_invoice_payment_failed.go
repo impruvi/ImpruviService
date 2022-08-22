@@ -18,6 +18,13 @@ func handleInvoicePaymentFailed(invoice *stripe.Invoice) error {
 		return err
 	}
 
+	player.CoachId = ""
+	err = playerFacade.UpdatePlayer(player)
+	if err != nil {
+		log.Printf("Error while removing coachId from player: %v\n", err)
+		return err
+	}
+
 	err = stripeFacade.CancelSubscription(player.StripeCustomerId)
 	if err != nil {
 		log.Printf("Failed to cancel subscription due to invoice payment failing: %v\n", err)

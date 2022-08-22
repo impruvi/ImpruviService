@@ -17,6 +17,7 @@ type SubscriptionPlan struct {
 	CoachId           string `json:"coachId"`
 	NumberOfTrainings int    `json:"numberOfTrainings"`
 	UnitAmount        int64  `json:"unitAmount"`
+	IsTrial           bool   `json:"isTrial"`
 }
 
 type PaymentMethod struct {

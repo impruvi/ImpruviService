@@ -270,6 +270,24 @@ func SendSubscriptionRenewedNotifications(player *playerFacade.Player, isSubscri
 		fmt.Sprintf("You have 24 hours to create %v training sessions for them", subscription.Plan.NumberOfTrainings))
 }
 
+func SendTrialEndedNotifications(player *playerFacade.Player) error {
+	snsAccessor.SendTextToSystem(fmt.Sprintf("%v %v trial has ended", player.FirstName, player.LastName))
+	if player.NotificationId != "" {
+		log.Printf("Sending push notification for trial ended to: %v. %v\n", player.CoachId, player.NotificationId)
+		expoAccessor.SendPushNotification(
+			"Your trial has ended",
+			fmt.Sprintf("Purchase your new subscription at impruviapp.com"),
+			player.NotificationId)
+	} else {
+		log.Printf("Not sending push notification for trial ended")
+	}
+	return sesAccessor.SendEmail(
+		player.Email,
+		"Your trial has ended",
+		"<div>Purchase your new subscription at <a href=\"https://impruviapp.com\">impruviapp.com</a></div>",
+		"Purchase your new subscription at impruviapp.com")
+}
+
 func SendSubscriptionCancelledNotification(player *playerFacade.Player) error {
 	return snsAccessor.SendTextToSystem(fmt.Sprintf("%v %v's subscription has been cancelled.", player.FirstName, player.LastName))
 }

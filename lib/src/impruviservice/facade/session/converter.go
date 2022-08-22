@@ -46,6 +46,7 @@ func convert(sess *sessionDao.SessionDB) (*Session, error) {
 	return &Session{
 		PlayerId:                   sess.PlayerId,
 		SessionNumber:              sess.SessionNumber,
+		CoachId: sess.CoachId,
 		Drills:                     drills,
 		CreationDateEpochMillis:    sess.CreationDateEpochMillis,
 		LastUpdatedDateEpochMillis: sess.LastUpdatedDateEpochMillis,
