@@ -12,6 +12,14 @@ func GetCoachById(coachId string) (*coachDao.CoachDB, error) {
 	return coach, nil
 }
 
+func GetCoachBySlug(slug string) (*coachDao.CoachDB, error) {
+	coach, err := coachDao.GetCoachBySlug(slug)
+	if err != nil {
+		return nil, err
+	}
+	return coach, nil
+}
+
 func ListCoaches(limit int) ([]*coachDao.CoachDB, error) {
 	coaches, err := coachDao.ListCoaches()
 	if err != nil {

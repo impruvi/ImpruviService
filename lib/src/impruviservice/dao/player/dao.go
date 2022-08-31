@@ -72,3 +72,7 @@ func GetPlayersForCoach(coachId string) ([]*PlayerDB, error) {
 func PutPlayer(player *PlayerDB) error {
 	return mapper.Put(player)
 }
+
+func DeletePlayer(playerId string) error {
+	return mapper.Delete(dynamo.Key{PartitionKey: &dynamodb.AttributeValue{S: aws.String(playerId)}})
+}

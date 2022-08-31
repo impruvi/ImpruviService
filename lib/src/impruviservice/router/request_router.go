@@ -28,6 +28,7 @@ func (r *RequestRouter) Route(apiRequest events.APIGatewayProxyRequest) events.A
 		}
 	}
 
+	// TODO: don't make a special case for stripe events
 	if apiRequest.Resource == "/stripe-event" {
 		return *stripeevent.HandleStripeEvent(&apiRequest)
 	}
@@ -43,6 +44,7 @@ func (r *RequestRouter) Route(apiRequest events.APIGatewayProxyRequest) events.A
 	}
 
 	// unmarshal the request body into the appropriate type
+	// here we attempt to unmarshal the request body JSON into the type of the request handlers first argument
 	request := reflect.New(reflect.ValueOf(handler).Type().In(0))
 	var err = json.Unmarshal([]byte(apiRequest.Body), request.Interface())
 	if err != nil {
@@ -57,22 +59,33 @@ func (r *RequestRouter) Route(apiRequest events.APIGatewayProxyRequest) events.A
 	res := reflect.ValueOf(handler).Call([]reflect.Value{request.Elem()})
 
 	// convert the response
+	// each request handler can either return
+	// - a response and an error
+	// - just an error
+	// So here we check if the handler is returning just one parameter or two. If the handler
+	// returns only one parameter, that parameter is assumed to be of type `error`. If the handler
+	// returns two arguments they are assumed to be of type `responseObject` and `error`.
 	if len(res) == 1 {
 		if res[0].Interface() != nil {
+			// The handler returned an error
 			err = res[0].Interface().(error)
 			log.Printf("Error: %v\n", err)
 			return convertError(err)
 		} else {
+			// The handler did not return an error
 			return events.APIGatewayProxyResponse{
 				StatusCode: http.StatusAccepted,
 			}
 		}
 	} else {
 		if res[1].Interface() != nil {
+			// The handler returned an error
 			err = res[1].Interface().(error)
 			log.Printf("Error: %v\n", err)
 			return convertError(err)
 		} else {
+			// The handler did not return an error
+			// marshal the response object to JSON
 			resBytes, err := json.Marshal(res[0].Interface())
 			if err != nil {
 				log.Printf("[ERROR] Error: %v\n", err)

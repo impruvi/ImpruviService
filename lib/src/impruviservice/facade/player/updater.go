@@ -86,6 +86,10 @@ func UpdatePlayer(player *Player) error {
 	return nil
 }
 
+func DeletePlayer(playerId string) error {
+	return playerDao.DeletePlayer(playerId)
+}
+
 func UpdateNotificationId(playerId, notificationId string) (*Player, error) {
 	playerDB, err := playerDao.GetPlayerById(playerId)
 	if err != nil {

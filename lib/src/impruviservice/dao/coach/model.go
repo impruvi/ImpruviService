@@ -5,9 +5,12 @@ import (
 )
 
 const coachIdAttr = "coachId"
+const slugAttr = "slug"
+const slugIndexName = "slug-index"
 
 type CoachDB struct {
 	CoachId                    string                       `json:"coachId"`
+	Slug                       string                       `json:"slug"`
 	FirstName                  string                       `json:"firstName"`
 	LastName                   string                       `json:"lastName"`
 	Email                      string                       `json:"email"`

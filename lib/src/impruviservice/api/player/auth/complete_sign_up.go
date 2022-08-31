@@ -9,6 +9,7 @@ import (
 type CompleteSignUpRequest struct {
 	PlayerId string `json:"playerId"`
 	Code     string `json:"code"`
+	ExpoPushToken string `json:"expoPushToken"`
 }
 
 type CompleteSignUpResponse struct {
@@ -32,6 +33,12 @@ func CompleteSignUp(request *CompleteSignUpRequest) (*CompleteSignUpResponse, er
 	token, err := playerFacade.GenerateToken(player.PlayerId)
 	if err != nil {
 		return nil, err
+	}
+	if player.NotificationId != request.ExpoPushToken {
+		player, err = playerFacade.UpdateNotificationId(player.PlayerId, request.ExpoPushToken)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &CompleteSignUpResponse{

@@ -9,7 +9,7 @@ import (
 
 var systemPhoneNumbers = []string{
 	"+14253277259",
-	"+18084288591",
+	"+17202331012",
 }
 
 var snsClient = snsclient.GetClient()
@@ -18,6 +18,7 @@ func SendTextToSystem(message string) error {
 	for _, phoneNumber := range systemPhoneNumbers {
 		err := SendTextMessage(phoneNumber, message)
 		if err != nil {
+			log.Printf("Error while sending system text message: %v\n", err)
 			return err
 		}
 	}
