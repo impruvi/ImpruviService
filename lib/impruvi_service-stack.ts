@@ -165,6 +165,13 @@ export class ImpruviServiceStack extends cdk.Stack {
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
         });
 
+        new dynamodb.Table(this, `${this.domain}-coach-applications`, {
+            partitionKey: {name: 'applicationId', type: dynamodb.AttributeType.STRING},
+            tableName: `${this.domain}-coach-applications`,
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
+            billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        });
+
         const drillsTable = new dynamodb.Table(this, `${this.domain}-drills`, {
             partitionKey: {name: 'drillId', type: dynamodb.AttributeType.STRING},
             tableName: `${this.domain}-drills`,
@@ -363,6 +370,7 @@ export class ImpruviServiceStack extends cdk.Stack {
                 ['/coach/get', [HttpMethod.POST]],
                 ['/coach/get-by-slug', [HttpMethod.POST]],
                 ['/coach/players-and-subscriptions/get', [HttpMethod.POST]],
+                ['/coach/application/create', [HttpMethod.POST]],
 
                 ['/sessions/player/get', [HttpMethod.POST]],
                 ['/sessions/coach/get', [HttpMethod.POST]],
@@ -435,7 +443,8 @@ export class ImpruviServiceStack extends cdk.Stack {
             errorResponses: [
                 {
                     httpStatus: 403,
-                    responsePagePath: '/index.html'
+                    responsePagePath: '/index.html',
+                    responseHttpStatus: 200
                 }
             ],
             domainNames: domainNames,

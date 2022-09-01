@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/stripe/stripe-go"
 	"impruviService/api/coach"
+	coachApplication "impruviService/api/coach/application"
 	appCompatibility "impruviService/api/compatibility"
 	"impruviService/api/drill"
 	"impruviService/api/inbox"
@@ -71,6 +72,7 @@ var requestRouter = router.RequestRouter{
 		"/coach/get":                           coach.GetCoach,
 		"/coach/get-by-slug":                   coach.GetCoachBySlug,
 		"/coach/players-and-subscriptions/get": coach.GetPlayersAndSubscriptions,
+		"/coach/application/create":            coachApplication.CreateCoachApplication,
 		"/sessions/feedback/view":              session.ViewFeedback,
 		"/sessions/player/get":                 session.GetSessionsForPlayer,
 		"/sessions/coach/get":                  session.GetSessionsForCoach,
