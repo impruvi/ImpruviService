@@ -172,6 +172,13 @@ export class ImpruviServiceStack extends cdk.Stack {
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
         });
 
+        new dynamodb.Table(this, `${this.domain}-email-list-subscriptions`, {
+            partitionKey: {name: 'email', type: dynamodb.AttributeType.STRING},
+            tableName: `${this.domain}-email-list-subscriptions`,
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
+            billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        });
+
         const drillsTable = new dynamodb.Table(this, `${this.domain}-drills`, {
             partitionKey: {name: 'drillId', type: dynamodb.AttributeType.STRING},
             tableName: `${this.domain}-drills`,
@@ -358,6 +365,7 @@ export class ImpruviServiceStack extends cdk.Stack {
                 ['/player/subscription/create', [HttpMethod.POST]],
                 ['/player/subscription/cancel', [HttpMethod.POST]],
                 ['/player/subscription-history/get', [HttpMethod.POST]],
+                ['/player/one-time-purchase/create', [HttpMethod.POST]],
                 ['/player/password-reset/initiate', [HttpMethod.POST]],
                 ['/player/password-reset/validate-code', [HttpMethod.POST]],
                 ['/player/password-reset/complete', [HttpMethod.POST]],
@@ -388,6 +396,8 @@ export class ImpruviServiceStack extends cdk.Stack {
                 ['/drills/delete', [HttpMethod.POST]],
                 ['/drills/coach/get', [HttpMethod.POST]],
                 ['/drills/player/get', [HttpMethod.POST]],
+
+                ['/email-list/subscribe', [HttpMethod.POST]],
 
                 ['/media-upload-url/generate', [HttpMethod.POST]],
 
@@ -428,10 +438,8 @@ export class ImpruviServiceStack extends cdk.Stack {
             ],
         }));
 
-        const domainNames = this.domain === 'prod' ? ['impruviapp.com'] : undefined;
-        const certificate = this.domain === 'prod'
-            ? certificateManager.Certificate.fromCertificateArn(this, "sslCertificate", "arn:aws:acm:us-east-1:522042996447:certificate/8e8a4051-4063-4faa-9b47-db7999e9ad35")
-            : undefined;
+        const domainNames = [this.getWebsiteDomainName()];
+        const certificate = this.getWebsiteCertificate();
         new cloudfront.Distribution(this, `${this.domain}-impruvi-web-distribution`, {
             defaultBehavior: {
                 origin: new cloudfrontOrigins.S3Origin(bucket, {
@@ -450,5 +458,27 @@ export class ImpruviServiceStack extends cdk.Stack {
             domainNames: domainNames,
             certificate: certificate
         });
+    }
+
+    getWebsiteDomainName = () => {
+        switch (this.domain) {
+            case 'prod':
+                return 'impruviapp.com'
+            case 'beta':
+                return 'beta.impruviapp.com';
+            default:
+                return '';
+        }
+    }
+
+    getWebsiteCertificate = () => {
+        switch (this.domain) {
+            case 'prod':
+                return certificateManager.Certificate.fromCertificateArn(this, "sslCertificate", 'arn:aws:acm:us-east-1:522042996447:certificate/8e8a4051-4063-4faa-9b47-db7999e9ad35')
+            case 'beta':
+                return certificateManager.Certificate.fromCertificateArn(this, "sslCertificate", 'arn:aws:acm:us-east-1:522042996447:certificate/5838ac7a-278f-44e6-bfc1-a9f4614cd65e')
+            default:
+                return undefined;
+        }
     }
 }

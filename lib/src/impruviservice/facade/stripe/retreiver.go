@@ -28,6 +28,23 @@ func GetSubscription(stripeCustomerId string) (*Subscription, error) {
 	return subscriptions[0], nil
 }
 
+func HasSubscription(stripeCustomerId string) (bool, error) {
+	if stripeCustomerId == "" {
+		return false, nil
+	}
+
+	_, err := GetSubscription(stripeCustomerId)
+	if err != nil {
+		if _, ok := err.(exceptions.ResourceNotFoundError); ok {
+			return false, nil
+		} else {
+			return false, err
+		}
+	}
+
+	return true, nil
+}
+
 func ListSubscriptions(stripeCustomerId string) ([]*Subscription, error) {
 	return getSubscriptionsWithStatus(stripeCustomerId, string(stripe.SubscriptionStatusAll))
 }
@@ -40,7 +57,7 @@ func getSubscriptionsWithStatus(stripeCustomerId, status string) ([]*Subscriptio
 
 	iter := stripeSubscription.List(&stripe.SubscriptionListParams{
 		Customer: stripeCustomerId,
-		Status: status,
+		Status:   status,
 	})
 	for iter.Next() {
 		subscription := iter.Subscription()
@@ -103,6 +120,14 @@ func GetSubscriptionPlan(stripeProductId, stripePriceId string) (*SubscriptionPl
 			return nil, err
 		}
 	}
+	isOneTimePurchase := false
+	if isOneTimePurchaseString, ok := plan.Metadata["isOneTimePurchase"]; ok {
+		isOneTimePurchase, err = strconv.ParseBool(isOneTimePurchaseString)
+		if err != nil {
+			log.Printf("Error while getting isOneTimePurchase. Metadata: %+v. Error: %v\n", plan.Metadata, err)
+			return nil, err
+		}
+	}
 
 	return &SubscriptionPlan{
 		StripeProductId:   stripeProductId,
@@ -112,6 +137,7 @@ func GetSubscriptionPlan(stripeProductId, stripePriceId string) (*SubscriptionPl
 		NumberOfTrainings: numberOfTrainings,
 		UnitAmount:        plan.Amount,
 		IsTrial:           isTrial,
+		IsOneTimePurchase: isOneTimePurchase,
 	}, nil
 }
 

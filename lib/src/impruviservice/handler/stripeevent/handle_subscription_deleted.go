@@ -46,7 +46,7 @@ func handleSubscriptionDeleted(subscription *stripe.Subscription) error {
 		} else {
 			recurrenceStartDateEpochMillis = util.GetCurrentTimeEpochMillis()
 		}
-		err = stripeFacade.CreateSubscription(player, recurrenceStartDateEpochMillis, defaultPaymentMethod.PaymentMethodId, player.QueuedSubscription)
+		player, err = stripeFacade.CreateSubscription(player, recurrenceStartDateEpochMillis, defaultPaymentMethod.PaymentMethodId, player.QueuedSubscription)
 		if err != nil {
 			log.Printf("Error while updating subscription to queued subscription: %v\n", err)
 			return err

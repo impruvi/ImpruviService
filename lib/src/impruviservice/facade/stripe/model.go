@@ -18,6 +18,7 @@ type SubscriptionPlan struct {
 	NumberOfTrainings int    `json:"numberOfTrainings"`
 	UnitAmount        int64  `json:"unitAmount"`
 	IsTrial           bool   `json:"isTrial"`
+	IsOneTimePurchase bool   `json:"isOneTimePurchase"`
 }
 
 type PaymentMethod struct {

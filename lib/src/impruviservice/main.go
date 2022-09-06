@@ -12,10 +12,12 @@ import (
 	coachApplication "impruviService/api/coach/application"
 	appCompatibility "impruviService/api/compatibility"
 	"impruviService/api/drill"
+	"impruviService/api/emaillist"
 	"impruviService/api/inbox"
 	"impruviService/api/invitationcode"
 	"impruviService/api/player"
 	playerAuth "impruviService/api/player/auth"
+	playerOneTimePurchase "impruviService/api/player/onetimepurchase"
 	playerSubscription "impruviService/api/player/subscription"
 	"impruviService/api/session"
 	"impruviService/api/subscriptionplan"
@@ -50,7 +52,7 @@ var requestRouter = router.RequestRouter{
 	WarmupHandler: warmup.HandleWarmupEvent,
 	Handlers: map[string]interface{}{
 		"/invitation-code/validate":            invitationcode.ValidateInvitationCode,
-		"/subscription-plan/get":               subscriptionplan.GetSubscriptionPlan,
+		"/subscription-plan/get":               subscriptionplan.GetSubscriptionPlan, // TODO: deprecate this
 		"/player/account/delete":               player.DeletePlayer,
 		"/player/sign-in":                      playerAuth.SignIn,
 		"/player/sign-up/initiate":             playerAuth.InitiateSignUp,
@@ -64,6 +66,7 @@ var requestRouter = router.RequestRouter{
 		"/player/subscription/get":             playerSubscription.GetSubscription,
 		"/player/subscription/cancel":          playerSubscription.CancelSubscription,
 		"/player/subscription-history/get":     playerSubscription.GetSubscriptionHistory,
+		"/player/one-time-purchase/create":     playerOneTimePurchase.CreateOneTimePurchase,
 		"/player/update":                       player.UpdatePlayer,
 		"/player/get":                          player.GetPlayer,
 		"/player/inbox/get":                    inbox.GetInboxForPlayer,
@@ -88,6 +91,7 @@ var requestRouter = router.RequestRouter{
 		"/drills/delete":                       drills.DeleteDrill,
 		"/drills/coach/get":                    drills.GetDrillsForCoach,
 		"/drills/player/get":                   drills.GetDrillsForPlayer,
+		"/email-list/subscribe":                emaillist.SubscribeToEmailList,
 		"/media-upload-url/generate":           uploadurl.GetMediaUploadUrl,
 		"/app-version/is-compatible":           appCompatibility.IsAppVersionCompatible,
 	},

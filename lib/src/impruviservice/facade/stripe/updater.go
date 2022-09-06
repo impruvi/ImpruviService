@@ -79,47 +79,28 @@ func ReactivateSubscription(stripeCustomerId string) error {
 	return err
 }
 
-func CreateSubscription(player *playerFacade.Player, recurrenceStartDateEpochMillis int64, paymentMethodId string, subscriptionPlanRef *model.SubscriptionPlanRef) error {
+// CreateSubscription can modify the player object if the player does not already have a stripe customer id.
+// The updated player object is returned.
+func CreateSubscription(player *playerFacade.Player, recurrenceStartDateEpochMillis int64, paymentMethodId string, subscriptionPlanRef *model.PricingPlan) (*playerFacade.Player, error) {
 	customer, err := getOrCreateCustomer(player)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	log.Printf("Customer: %+v\n", customer)
+	player.StripeCustomerId = customer.ID
+	err = playerFacade.UpdatePlayer(player)
+	if err != nil {
+		return nil, err
+	}
+
 	if paymentMethodId != "" {
 		err = AttachPaymentMethodIfNotExists(customer.ID, paymentMethodId)
 	}
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return subscribeToPlan(player.PlayerId, customer.ID, recurrenceStartDateEpochMillis, subscriptionPlanRef)
-}
-
-func getOrCreateCustomer(player *playerFacade.Player) (*stripe.Customer, error) {
-	if player.StripeCustomerId != "" {
-		// customer already exists
-		log.Printf("Stripe customerId already exists: %v\n", player.StripeCustomerId)
-		return stripeCustomer.Get(player.StripeCustomerId, nil)
-	} else {
-		// create customer
-		params := &stripe.CustomerParams{
-			Name:  stripe.String(fmt.Sprintf("%s %s", player.FirstName, player.LastName)),
-			Email: stripe.String(player.Email),
-		}
-		log.Printf("Stripe customerId does not already exist. Creating with params: %+v\n", params)
-		customer, _ := stripeCustomer.New(params)
-		log.Printf("Created customer: %+v\n", customer)
-
-		// store customerId along with player object
-		player.StripeCustomerId = customer.ID
-		err := playerFacade.UpdatePlayer(player)
-		if err != nil {
-			return nil, err
-		}
-
-		return customer, nil
-	}
+	return player, subscribeToPlan(player.PlayerId, customer.ID, recurrenceStartDateEpochMillis, subscriptionPlanRef)
 }
 
 func AttachPaymentMethodIfNotExists(stripeCustomerId, paymentMethodId string) error {
@@ -164,9 +145,28 @@ func AttachPaymentMethodIfNotExists(stripeCustomerId, paymentMethodId string) er
 	return nil
 }
 
-func subscribeToPlan(playerId, stripeCustomerId string, recurrenceStartDateEpochMillis int64, subscriptionPlanRef *model.SubscriptionPlanRef) error {
+func getOrCreateCustomer(player *playerFacade.Player) (*stripe.Customer, error) {
+	if player.StripeCustomerId != "" {
+		// customer already exists
+		log.Printf("Stripe customerId already exists: %v\n", player.StripeCustomerId)
+		return stripeCustomer.Get(player.StripeCustomerId, nil)
+	} else {
+		// create customer
+		params := &stripe.CustomerParams{
+			Name:  stripe.String(fmt.Sprintf("%s %s", player.FirstName, player.LastName)),
+			Email: stripe.String(player.Email),
+		}
+		log.Printf("Stripe customerId does not already exist. Creating with params: %+v\n", params)
+		customer, _ := stripeCustomer.New(params)
+		log.Printf("Created customer: %+v\n", customer)
+
+		return customer, nil
+	}
+}
+
+func subscribeToPlan(playerId, stripeCustomerId string, recurrenceStartDateEpochMillis int64, priceRef *model.PricingPlan) error {
 	// TODO: we can probably remove the below
-	product, err := stripeProduct.Get(subscriptionPlanRef.StripeProductId, nil)
+	product, err := stripeProduct.Get(priceRef.StripeProductId, nil)
 	if err != nil {
 		return err
 	}
@@ -178,7 +178,7 @@ func subscribeToPlan(playerId, stripeCustomerId string, recurrenceStartDateEpoch
 		Customer: stripe.String(stripeCustomerId),
 		Items: []*stripe.SubscriptionItemsParams{
 			{
-				Plan: stripe.String(subscriptionPlanRef.StripePriceId),
+				Plan: stripe.String(priceRef.StripePriceId),
 			},
 		},
 	}
@@ -194,5 +194,19 @@ func subscribeToPlan(playerId, stripeCustomerId string, recurrenceStartDateEpoch
 	if subscription.Status != stripe.SubscriptionStatusActive {
 		log.Printf("Subscription status is not active!") // TODO: notify us of unexpected event
 	}
+
+	subscriptionPlan, err := GetSubscriptionPlan(priceRef.StripeProductId, priceRef.StripePriceId)
+	if err != nil {
+		log.Printf("Error while getting subscription plan: %v\n", err)
+		return err
+	}
+	if subscriptionPlan.IsTrial || subscriptionPlan.IsOneTimePurchase {
+		err = UpdateSubscriptionToCancelAtPeriodEnd(stripeCustomerId)
+		if err != nil {
+			log.Printf("Error while updating subscription to cancel at period end: %v\n", err)
+			return err
+		}
+	}
+
 	return nil
 }
